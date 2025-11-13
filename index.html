@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinerja & Karir - Payboss Cafe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7faff; /* Latar belakang baru yang lebih bersih */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 550px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        /* Navigasi Tab Aktif */
+        .nav-tab-active {
+            border-left-color: #0d9488; /* Teal-600 */
+            background-color: #f0fdfa; /* Teal-50 */
+            color: #0f766e; /* Teal-700 */
+            font-weight: 600;
+        }
+        /* Loading spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0d9488; /* Teal-600 */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Styling untuk kartu feedback berwarna */
+        .feedback-card-good { border-left-color: #22c55e; /* Green-500 */ }
+        .feedback-card-ok { border-left-color: #eab308; /* Yellow-500 */ }
+        .feedback-card-bad { border-left-color: #ef4444; /* Red-500 */ }
+    </style>
+</head>
+<body class="text-slate-800">
+    <!-- Chosen Palette: Fresh Teal, Professional Indigo, and Warm Grays -->
+    <!-- Application Structure Plan: Redesain visual besar-besaran (v3). Menggunakan ikon SVG (Heroicons) di seluruh navigasi dan form untuk kejelasan. Dashboard Manajer dirombak total menjadi grid 'KPI Cards' (Karyawan, Feedback, Evaluasi, Rating) dan 'Quick Actions' untuk nuansa yang lebih "ramai" dan fungsional. Palet warna diubah ke Indigo + Teal yang lebih segar. Menambahkan border berwarna pada kartu feedback pelanggan (merah/kuning/hijau) berdasarkan rating. -->
+    <!-- Visualization & Content Choices: Pilihan chart (Radar) tetap, tetapi disajikan dalam kartu yang lebih baik. Data baru (kartu KPI Manajer) disajikan sebagai teks besar (angka) dengan ikon untuk dampak visual yang cepat dan mudah dipahami. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. (Inline SVGs from libraries are exceptions and treated as code, not static graphics) -->
+
+    <!-- Global Header -->
+    <header class="sticky top-0 z-50 bg-white shadow-md">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <!-- Ikon Cafe Baru -->
+                <svg class="h-8 w-auto text-teal-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M11 2a1 1 0 011 1v1h1a1 1 0 011 1v2a1 1 0 01-1 1h-1v1a1 1 0 01-1 1H9a1 1 0 01-1-1V8H7a1 1 0 01-1-1V5a1 1 0 011-1h1V3a1 1 0 011-1h2z" />
+                  <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM4 14a1 1 0 100 2h12a1 1 0 100-2H4z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-2xl font-bold text-teal-700">Payboss Cafe</span>
+            </div>
+            <div id="userInfo" class="text-right text-sm text-slate-600"></div>
+            <button id="logoutButton" onclick="logout()" class="hidden ml-4 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out text-sm">
+                Logout
+            </button>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- =================================================================== -->
+        <!-- LOGIN PAGE -->
+        <!-- =================================================================== -->
+        <div id="loginPage" class="max-w-md mx-auto bg-white rounded-xl shadow-2xl p-8 md:p-10 mt-10 md:mt-16 border border-gray-100">
+            <div class="flex justify-center mb-6">
+                 <svg class="h-16 w-auto text-teal-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 4a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zM8.22 8.22a.75.75 0 000 1.06l1.25 1.25a.75.75 0 001.06 0l1.25-1.25a.75.75 0 10-1.06-1.06L10 8.94 8.78 7.72a.75.75 0 00-1.06 0zM4 11a1 1 0 100 2h12a1 1 0 100-2H4z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-2">Selamat Datang</h2>
+            <p class="text-center text-slate-500 mb-8">Silakan pilih peran Anda.</p>
+
+            <div class="space-y-4">
+                <button onclick="showPage('customerPage')" class="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold py-3 px-5 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                    <span class="text-lg">Beri Feedback (Pelanggan)</span>
+                </button>
+                
+                <div class="relative py-4">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center">
+                        <span class="bg-white px-4 text-sm text-gray-500">Login Karyawan / Manajer</span>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-slate-700 mb-1">Nama Pengguna</label>
+                        <select id="username" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-50">
+                            <option value="">-- Pilih Nama Anda --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                        <input type="password" id="password" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Password...">
+                    </div>
+                    <button onclick="handleLogin()" class="w-full bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold py-3 px-5 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                        <span class="text-lg">Login</span>
+                    </button>
+                    <p id="loginError" class="text-red-500 text-sm text-center hidden">Username atau password salah.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- CUSTOMER FEEDBACK PAGE -->
+        <!-- =================================================================== -->
+        <div id="customerPage" class="page hidden max-w-lg mx-auto bg-white rounded-xl shadow-2xl p-8 md:p-10 mt-10 border border-gray-100">
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-4">Feedback Pelanggan</h2>
+            <p class="text-center text-slate-500 mb-8">Masukan Anda sangat berharga untuk kami.</p>
+            <form id="customerForm">
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Penilaian Keseluruhan Anda?</label>
+                        <div class="flex flex-wrap justify-around p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <label class="flex items-center space-x-2 m-1"><input type="radio" name="overall" value="1" class="text-teal-600 focus:ring-teal-500"> <span>Buruk</span></label>
+                            <label class="flex items-center space-x-2 m-1"><input type="radio" name="overall" value="3" class="text-teal-600 focus:ring-teal-500" checked> <span>Cukup</span></label>
+                            <label class="flex items-center space-x-2 m-1"><input type="radio" name="overall" value="5" class="text-teal-600 focus:ring-teal-500"> <span>Sangat Baik</span></label>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="ratingFood" class="block text-sm font-medium text-slate-700 mb-1">Rasa Makanan</label>
+                            <select id="ratingFood" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                <option value="5">5 - Sangat Baik</option>
+                                <option value="4">4 - Baik</option>
+                                <option value="3">3 - Cukup</option>
+                                <option value="2">2 - Buruk</option>
+                                <option value="1">1 - Sangat Buruk</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="ratingDrink" class="block text-sm font-medium text-slate-700 mb-1">Rasa Minuman</label>
+                            <select id="ratingDrink" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                <option value="5">5 - Sangat Baik</option>
+                                <option value="4">4 - Baik</option>
+                                <option value="3">3 - Cukup</option>
+                                <option value="2">2 - Buruk</option>
+                                <option value="1">1 - Sangat Buruk</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="ratingService" class="block text-sm font-medium text-slate-700 mb-1">Pelayanan</label>
+                            <select id="ratingService" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                <option value="5">5 - Sangat Baik</option>
+                                <option value="4">4 - Baik</option>
+                                <option value="3">3 - Cukup</option>
+                                <option value="2">2 - Buruk</option>
+                                <option value="1">1 - Sangat Buruk</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="customerComment" class="block text-sm font-medium text-slate-700 mb-1">Komentar atau Masukan Lainnya</label>
+                        <textarea id="customerComment" rows="4" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Apa yang bisa kami tingkatkan?"></textarea>
+                    </div>
+                    
+                    <button id="customerSubmitButton" type="button" onclick="submitCustomerFeedback()" class="w-full bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold py-3 px-5 rounded-lg shadow-lg transition duration-300 ease-in-out transform hover:scale-105">
+                        Kirim Feedback
+                    </button>
+                    <p id="customerThanks" class="hidden text-center text-lg font-semibold text-green-600 mt-6">Terima kasih atas masukan Anda!</p>
+                    <p id="customerError" class="hidden text-center text-red-500 mt-4"></p>
+                </div>
+            </form>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- EMPLOYEE DASHBOARD PAGE -->
+        <!-- =================================================================== -->
+        <div id="employeePage" class="page hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">Dashboard Karyawan</h2>
+            
+            <div class="flex flex-col md:flex-row gap-6 lg:gap-8">
+                <!-- Employee Nav -->
+                <div class="w-full md:w-1/4">
+                    <div class="bg-white rounded-lg shadow-lg p-4 space-y-2 border border-gray-100">
+                        <button onclick="showEmployeeSubPage('employeeKpi')" class="nav-tab w-full text-left font-medium text-slate-600 hover:bg-teal-50 hover:text-teal-700 p-3 rounded-lg transition duration-200 border-l-4 border-transparent nav-tab-active flex items-center space-x-3">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>
+                            <span>Isi KPI Bulanan</span>
+                        </button>
+                        <button onclick="showEmployeeSubPage('employeeCareer')" class="nav-tab w-full text-left font-medium text-slate-600 hover:bg-teal-50 hover:text-teal-700 p-3 rounded-lg transition duration-200 border-l-4 border-transparent flex items-center space-x-3">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2.5a.75.75 0 00-.75.75v.258a3.987 3.987 0 00-1.5.065A.75.75 0 007 4.25v1.5a.75.75 0 00.75.75h.5a.75.75 0 00.75-.75V5.5h2V6a.75.75 0 00.75.75h.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75a3.987 3.987 0 00-1.5-.065V3.25A.75.75 0 0010 2.5zM10 15a.75.75 0 00-.75.75v.258a3.987 3.987 0 00-1.5.065A.75.75 0 007 16.75v1.5a.75.75 0 00.75.75h.5a.75.75 0 00.75-.75v-.25h2v.25a.75.75 0 00.75.75h.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75a3.987 3.987 0 00-1.5-.065V15.75A.75.75 0 0010 15zM10 8a.75.75 0 00-.75.75v.258a3.987 3.987 0 00-1.5.065A.75.75 0 007 9.75v1.5a.75.75 0 00.75.75h.5a.75.75 0 00.75-.75V11.5h2v.25a.75.75 0 00.75.75h.5a.75.75 0 00.75-.75v-1.5a.75.75 0 00-.75-.75a3.987 3.987 0 00-1.5-.065V8.75A.75.75 0 0010 8z" clip-rule="evenodd" /></svg>
+                            <span>Jenjang Karir Saya</span>
+                        </button>
+                        <button onclick="showEmployeeSubPage('employeeEvals')" class="nav-tab w-full text-left font-medium text-slate-600 hover:bg-teal-50 hover:text-teal-700 p-3 rounded-lg transition duration-200 border-l-4 border-transparent flex items-center space-x-3">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12.5a.75.75 0 01.75.75v.01a.75.75 0 01-1.5 0V13.25a.75.75 0 01.75-.75zM10 6a.75.75 0 01.75.75v2.5a.75.75 0 01-1.5 0v-2.5A.75.75 0 0110 6z" /><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM9.25 15.25a.75.75 0 001.5 0v.01a.75.75 0 00-1.5 0v-.01zM10 2.5a.75.75 0 00-1.313-.633l-.002.002-.002.002A5.5 5.5 0 002.5 10a.75.75 0 001.5 0 4 4 0 118 0 .75.75 0 001.5 0A5.5 5.5 0 0011.315 2.5l-.002-.002h-.001A.75.75 0 0010 2.5z" clip-rule="evenodd" /></svg>
+                            <span>Hasil Evaluasi Saya</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Employee Content -->
+                <div class="w-full md:w-3/4">
+                    <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 border border-gray-100">
+                        <!-- KPI Form -->
+                        <div id="employeeKpi" class="employee-sub-page">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">Form KPI Bulanan</h3>
+                            <p class="mb-6 text-slate-600">Isi formulir ini untuk melaporkan pencapaian Anda bulan ini. Ini akan menjadi bagian dari evaluasi kinerja Anda.</p>
+                            <form id="kpiForm">
+                                <div class="space-y-5">
+                                    <div>
+                                        <label for="kpiTarget" class="flex items-center text-sm font-medium text-slate-700 mb-1">
+                                            <svg class="h-5 w-5 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>
+                                            Target Utama Bulan Ini
+                                        </label>
+                                        <input type="text" id="kpiTarget" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Contoh: Menjual 50 cup Kopi Payboss">
+                                    </div>
+                                    <div>
+                                        <label for="kpiActual" class="flex items-center text-sm font-medium text-slate-700 mb-1">
+                                            <svg class="h-5 w-5 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM.5 10a9.5 9.5 0 1119 0 9.5 9.5 0 01-19 0zM10 4a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 4z" clip-rule="evenodd" /></svg>
+                                            Pencapaian Aktual
+                                        </label>
+                                        <input type="text" id="kpiActual" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Contoh: Terjual 55 cup">
+                                     </div>
+                                    <div>
+                                        <label for="kpiSelfRating" class="flex items-center text-sm font-medium text-slate-700 mb-1">
+                                            <svg class="h-5 w-5 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.868 2.884c.321-.772 1.415-.772 1.736 0l1.99 4.83c.094.228.313.39.56.432l5.323.774c.827.12 1.157 1.13.56 1.716l-3.85 3.753a.752.752 0 00-.214.662l.91 5.303c.14 1.118-.734 1.635-1.59.845l-4.75-2.497a.75.75 0 00-.702 0l-4.75 2.497c-.856.79-1.73-.272-1.59-.845l.91-5.303a.75.75 0 00-.214-.662l-3.85-3.753c-.596-.586-.267-1.596.56-1.716l5.323-.774a.75.75 0 00.56-.432l1.99-4.83z" clip-rule="evenodd" /></svg>
+                                            Penilaian Diri (1-5)
+                                        </label>
+                                        <input type="number" id="kpiSelfRating" min="1" max="5" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="3">
+                                    </div>
+                                    <div>
+                                        <label for="kpiComment" class="flex items-center text-sm font-medium text-slate-700 mb-1">
+                                            <svg class="h-5 w-5 mr-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.25 5.5a.75.75 0 00-.75.75v8.5a.75.75 0 00.75.75h11.5a.75.75 0 00.75-.75v-8.5a.75.75 0 00-.75-.75H4.25zM3.5 6.25a1.75 1.75 0 011.75-1.75h9.5a1.75 1.75 0 011.75 1.75v7.5a1.75 1.75 0 01-1.75 1.75h-9.5A1.75 1.75 0 013.5 13.75v-7.5z" clip-rule="evenodd" /></svg>
+                                            Tantangan & Pencapaian Lainnya
+                                        </label>
+                                        <textarea id="kpiComment" rows="4" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Apa yang berjalan baik? Apa yang perlu diperbaiki?"></textarea>
+                                    </div>
+                                    <button id="kpiSubmitButton" type="button" onclick="submitKpiForm()" class="w-full bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold py-3 px-5 rounded-lg shadow-lg transition duration-300 ease-in-out">
+                                        Kirim Laporan KPI
+                                    </button>
+                                    <p id="kpiThanks" class="hidden text-center text-lg font-semibold text-green-600 mt-6">Laporan KPI berhasil dikirim!</p>
+                                    <p id="kpiError" class="hidden text-center text-red-500 mt-4"></p>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Career Path -->
+                        <div id="employeeCareer" class="employee-sub-page hidden">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">Jenjang Karir Saya</h3>
+                            <div id="careerPathDetails"></div>
+                        </div>
+
+                        <!-- My Evals -->
+                        <div id="employeeEvals" class="employee-sub-page hidden">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">Hasil Evaluasi & Feedback</h3>
+                            <p class="mb-6 text-slate-600">Di sinilah Anda akan melihat ringkasan evaluasi dari manajer dan feedback dari pelanggan.</p>
+                            <div id="employeeEvalLoader" class="flex justify-center my-8">
+                                <div class="loader"></div>
+                            </div>
+                            <div id="employeeEvalContent" class="space-y-6">
+                                <!-- Konten dinamis dari Google Sheet -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- MANAGER DASHBOARD PAGE -->
+        <!-- =================================================================== -->
+        <div id="managerPage" class="page hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">Dashboard Manajer</h2>
+            
+            <div class="flex flex-col md:flex-row gap-6 lg:gap-8">
+                <!-- Manager Nav -->
+                <div class="w-full md:w-1/4">
+                    <div class="bg-white rounded-lg shadow-lg p-4 space-y-2 border border-gray-100">
+                        <button onclick="showManagerSubPage('managerHome')" class="nav-tab w-full text-left font-medium text-slate-600 hover:bg-teal-50 hover:text-teal-700 p-3 rounded-lg transition duration-200 border-l-4 border-transparent nav-tab-active flex items-center space-x-3">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 10.707V17.5a1 1 0 01-1 1h-3.25a.75.75 0 01-.75-.75V13.5a.75.75 0 00-.75-.75h-2.5a.75.75 0 00-.75.75v3.25a.75.75 0 01-.75.75H4a1 1 0 01-1-1V10.707a1 1 0 01.293-.707l7-7z" clip-rule="evenodd" /></svg>
+                            <span>Dashboard Utama</span>
+                        </button>
+                        <button onclick="showManagerSubPage('managerEvaluate')" class="nav-tab w-full text-left font-medium text-slate-600 hover:bg-teal-50 hover:text-teal-700 p-3 rounded-lg transition duration-200 border-l-4 border-transparent flex items-center space-x-3">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.25a.75.75 0 00-1.5 0v2.5h-2.5a.75.75 0 000 1.5h2.5v2.5a.75.75 0 001.5 0v-2.5h2.5a.75.75 0 000-1.5h-2.5v-2.5z" clip-rule="evenodd" /></svg>
+                            <span>Evaluasi Karyawan</span>
+                        </button>
+                        <button onclick="showManagerSubPage('managerAnalysis')" class="nav-tab w-full text-left font-medium text-slate-600 hover:bg-teal-50 hover:text-teal-700 p-3 rounded-lg transition duration-200 border-l-4 border-transparent flex items-center space-x-3">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3.5A1.5 1.5 0 014.5 2h6.879a1.5 1.5 0 011.06.44l4.122 4.12A1.5 1.5 0 0117 7.622V16.5a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 013 16.5v-13zM11.5 3.5v3.621a.5.5 0 00.5.5H15.62L11.5 3.5zM9 10a1 1 0 112 0v5a1 1 0 11-2 0v-5zm-3-1a1 1 0 100 2h.01a1 1 0 100-2H6zm8 0a1 1 0 100 2h.01a1 1 0 100-2H14z" clip-rule="evenodd" /></svg>
+                            <span>Analisis & Karir</span>
+                        </button>
+                        <button onclick="showManagerSubPage('managerFeedback')" class="nav-tab w-full text-left font-medium text-slate-600 hover:bg-teal-50 hover:text-teal-700 p-3 rounded-lg transition duration-200 border-l-4 border-transparent flex items-center space-x-3">
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zM8.5 5.5V9H10V5.5a1.5 1.5 0 113 0V9h1.5v6H6v-6H7.5V5.5a2.5 2.5 0 015 0z" clip-rule="evenodd" /></svg>
+                            <span>Feedback Pelanggan</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Manager Content -->
+                <div class="w-full md:w-3/4">
+                    <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 border border-gray-100">
+                        <!-- Manager Home (NEW DASHBOARD) -->
+                        <div id="managerHome" class="manager-sub-page">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">Ringkasan Tim</h3>
+                            <p class="mb-6 text-slate-600">Selamat datang, Manajer. Berikut adalah ringkasan performa tim saat ini.</p>
+                            
+                            <!-- KPI Card Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                                <div class="bg-gray-50 border border-gray-200 p-5 rounded-lg shadow-sm flex items-center space-x-4">
+                                    <div class="flex-shrink-0 bg-teal-100 text-teal-600 p-3 rounded-full">
+                                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.468 14.509A3.249 3.249 0 006.18 16.5h7.64a3.249 3.249 0 002.712-1.991A5.25 5.25 0 0012.5 10.5h-5a5.25 5.25 0 00-3.969 4.009z" /></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-500">Total Karyawan</p>
+                                        <p class="text-2xl font-bold text-gray-800" id="managerEmployeeCount">0</p>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 border border-gray-200 p-5 rounded-lg shadow-sm flex items-center space-x-4">
+                                    <div class="flex-shrink-0 bg-teal-100 text-teal-600 p-3 rounded-full">
+                                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22V11a.75.75 0 001.5 0V6.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h3.69L5.22 13.72a.75.75 0 000 1.06z" clip-rule="evenodd" /></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-500">Feedback Baru</p>
+                                        <p class="text-2xl font-bold text-gray-800" id="managerFeedbackCount">0</p>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 border border-gray-200 p-5 rounded-lg shadow-sm flex items-center space-x-4">
+                                    <div class="flex-shrink-0 bg-indigo-100 text-indigo-600 p-3 rounded-full">
+                                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.403 3.903a.75.75 0 00-1.06 0l-1.5 1.5a.75.75 0 001.06 1.06l1.5-1.5a.75.75 0 000-1.06zM6.66 15.34a.75.75 0 00-1.06 0l-1.5 1.5a.75.75 0 101.06 1.06l1.5-1.5a.75.75 0 000-1.06zM3.597 6.097a.75.75 0 000 1.06l1.5 1.5a.75.75 0 101.06-1.06l-1.5-1.5a.75.75 0 00-1.06 0zM13.903 16.403a.75.75 0 001.06 0l1.5-1.5a.75.75 0 00-1.06-1.06l-1.5 1.5a.75.75 0 000 1.06z" clip-rule="evenodd" /><path d="M10 2.5a.75.75 0 01.75.75v.01a.75.75 0 01-1.5 0V3.25a.75.75 0 01.75-.75zM10 15.75a.75.75 0 01.75.75v.01a.75.75 0 01-1.5 0v-.01a.75.75 0 01.75-.75zM3.25 10a.75.75 0 01.75-.75h.01a.75.75 0 010 1.5h-.01a.75.75 0 01-.75-.75zM15.75 10a.75.75 0 01.75-.75h.01a.75.75 0 010 1.5h-.01a.75.75 0 01-.75-.75z" /></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-500">KPI Bulan Ini</p>
+                                        <p class="text-2xl font-bold text-gray-800" id="managerKpiCount">0</p>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 border border-gray-200 p-5 rounded-lg shadow-sm flex items-center space-x-4">
+                                    <div class="flex-shrink-0 bg-amber-100 text-amber-600 p-3 rounded-full">
+                                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.868 2.884c.321-.772 1.415-.772 1.736 0l1.99 4.83c.094.228.313.39.56.432l5.323.774c.827.12 1.157 1.13.56 1.716l-3.85 3.753a.752.752 0 00-.214.662l.91 5.303c.14 1.118-.734 1.635-1.59.845l-4.75-2.497a.75.75 0 00-.702 0l-4.75 2.497c-.856.79-1.73-.272-1.59-.845l.91-5.303a.75.75 0 00-.214-.662l-3.85-3.753c-.596-.586-.267-1.596.56-1.716l5.323-.774a.75.75 0 00.56-.432l1.99-4.83z" clip-rule="evenodd" /></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-500">Avg. Rating</p>
+                                        <p class="text-2xl font-bold text-gray-800" id="managerAvgRating">N/A</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Quick Actions -->
+                            <h4 class="text-lg font-semibold text-gray-700 mb-4">Aksi Cepat</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <button onclick="showManagerSubPage('managerEvaluate', document.querySelectorAll('#managerPage .nav-tab')[1])" class="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white p-6 rounded-lg shadow-lg text-left flex items-center space-x-4 transition duration-300 transform hover:scale-105">
+                                    <svg class="h-10 w-10 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zmM6.75 9.25a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" /></svg>
+                                    <div>
+                                        <p class="text-xl font-bold">Evaluasi Karyawan</p>
+                                        <p class="text-sm opacity-90">Beri nilai dan feedback untuk tim Anda.</p>
+                                    </div>
+                                </button>
+                                <button onclick="showManagerSubPage('managerAnalysis', document.querySelectorAll('#managerPage .nav-tab')[2])" class="bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600 text-white p-6 rounded-lg shadow-lg text-left flex items-center space-x-4 transition duration-300 transform hover:scale-105">
+                                    <svg class="h-10 w-10 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3.5A1.5 1.5 0 014.5 2h6.879a1.5 1.5 0 011.06.44l4.122 4.12A1.5 1.5 0 0117 7.622V16.5a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 013 16.5v-13zM11.5 3.5v3.621a.5.5 0 00.5.5H15.62L11.5 3.5zM9 10a1 1 0 112 0v5a1 1 0 11-2 0v-5zm-3-1a1 1 0 100 2h.01a1 1 0 100-2H6zm8 0a1 1 0 100 2h.01a1 1 0 100-2H14z" clip-rule="evenodd" /></svg>
+                                    <div>
+                                        <p class="text-xl font-bold">Lihat Analisis</p>
+                                        <p class="text-sm opacity-90">Analisis kinerja untuk promosi dan gaji.</p>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Manager Evaluate -->
+                        <div id="managerEvaluate" class="manager-sub-page hidden">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">Form Evaluasi Karyawan</h3>
+                            
+                            <div>
+                                <label for="evalEmployeeSelect" class="block text-sm font-medium text-slate-700 mb-1">Pilih Karyawan</e-label>
+                                <select id="evalEmployeeSelect" class="w-full md:w-2/3 p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mb-6 bg-gray-50">
+                                </select>
+                            </div>
+                            
+                            <form id="managerEvalForm">
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="evalQuality" class="block text-sm font-medium text-slate-700 mb-1">Kualitas Kerja (Rasa, Presisi)</label>
+                                            <input type="number" id="evalQuality" min="1" max="5" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                        </div>
+                                        <div>
+                                            <label for="evalSpeed" class="block text-sm font-medium text-slate-700 mb-1">Kecepatan & Efisiensi</label>
+                                            <input type="number" id="evalSpeed" min="1" max="5" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                        </div>
+                                        <div>
+                                            <label for="evalService" class="block text-sm font-medium text-slate-700 mb-1">Pelayanan & Keramahan</label>
+                                            <input type="number" id="evalService" min="1" max="5" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                        </div>
+                                        <div>
+                                            <label for="evalTeamwork" class="block text-sm font-medium text-slate-700 mb-1">Kerjasama Tim</label>
+                                            <input type="number" id="evalTeamwork" min="1" max="5" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="evalComment" class="block text-sm font-medium text-slate-700 mb-1">Komentar & Poin Pengembangan</label>
+                                        <textarea id="evalComment" rows="4" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Kekuatan, area untuk perbaikan, rencana ke depan..."></textarea>
+                                    </div>
+                                    <button id="evalSubmitButton" type="button" onclick="submitManagerEvaluation()" class="w-full bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold py-3 px-5 rounded-lg shadow-lg transition duration-300 ease-in-out">
+                                        Simpan Evaluasi
+                                    </button>
+                                    <p id="evalThanks" class="hidden text-center text-lg font-semibold text-green-600 mt-6">Evaluasi berhasil disimpan!</p>
+                                    <p id="evalError" class="hidden text-center text-red-500 mt-4"></p>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Manager Analysis -->
+                        <div id="managerAnalysis" class="manager-sub-page hidden">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">Analisis Kinerja & Jenjang Karir</h3>
+                            
+                            <div>
+                                <label for="analysisEmployeeSelect" class="block text-sm font-medium text-slate-700 mb-1">Pilih Karyawan untuk Analisis</label>
+                                <select id="analysisEmployeeSelect" onchange="showEmployeeAnalysis(this.value)" class="w-full md:w-2/3 p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mb-6 bg-gray-50">
+                                </select>
+                            </div>
+                            
+                            <div id="analysisLoader" class="hidden flex justify-center my-8">
+                                <div class="loader"></div>
+                            </div>
+                            
+                            <div id="analysisContent" class="hidden">
+                                <h4 id="analysisName" class="text-xl font-semibold text-gray-900 mb-6"></h4>
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <!-- Performance Chart -->
+                                    <div class="bg-white border border-gray-200 p-4 rounded-lg shadow-lg">
+                                        <h5 class="text-lg font-semibold text-gray-700 mb-3 text-center">Grafik Kinerja Karyawan</h5>
+                                        <div class="chart-container">
+                                            <canvas id="performanceChart"></canvas>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Career Path & Salary -->
+                                    <div class="bg-white border border-gray-200 p-6 rounded-lg shadow-lg">
+                                        <h5 class="text-lg font-semibold text-gray-700 mb-4">Jenjang Karir & Gaji</h5>
+                                        <div id="analysisCareerPath"></div>
+                                        
+                                        <div class="mt-6 border-t border-gray-300 pt-4">
+                                            <h6 class="font-semibold text-gray-700">Rekomendasi Aksi</h6>
+                                            <p class="text-sm text-slate-600 mb-3">Berdasarkan data kinerja, pertimbangkan:</p>
+                                            <div class="flex flex-wrap gap-2">
+                                                <button class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow text-sm transition duration-300">
+                                                    Ajukan Kenaikan Gaji
+                                                </button>
+                                                <button class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow text-sm transition duration-300">
+                                                    Rekomendasikan Promosi
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Feedback & KPI Summary -->
+                                    <div class="lg:col-span-2 bg-white border border-gray-200 p-6 rounded-lg shadow-lg">
+                                        <h5 class="text-lg font-semibold text-gray-700 mb-4">Ringkasan Data Pendukung</h5>
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                                <h6 class="font-semibold text-sm text-gray-500 uppercase tracking-wider">Feedback Pelanggan</h6>
+                                                <p id="analysisCustomerFeedback" class="text-gray-800 text-lg font-medium">N/A</p>
+                                            </div>
+                                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                                <h6 class="font-semibold text-sm text-gray-500 uppercase tracking-wider">Laporan KPI Terakhir</h6>
+                                                <p id="analysisKpi" class="text-gray-800 text-lg font-medium">N/A</p>
+                                            </div>
+                                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                                <h6 class="font-semibold text-sm text-gray-500 uppercase tracking-wider">Evaluasi Manajer</h6>
+                                                <p id="analysisManagerEval" class="text-gray-800 text-lg font-medium">N/A</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Manager Feedback -->
+                        <div id="managerFeedback" class="manager-sub-page hidden">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">Daftar Feedback Pelanggan</h3>
+                            <p class="mb-6 text-slate-600">Berikut adalah semua feedback yang masuk dari pelanggan, dibaca dari Google Sheet.</p>
+                            <div id="feedbackLoader" class="flex justify-center my-8">
+                                <div class="loader"></div>
+                            </div>
+                            <div id="feedbackList" class="space-y-4">
+                                <!-- Konten dinamis dari Google Sheet -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ===================================================================
+        // INSTRUKSI INTEGRASI GOOGLE SHEETS
+        // ===================================================================
+        //
+        // 1. Buat Google Sheet baru.
+        // 2. Buka "Extensions" > "Apps Script".
+        // 3. Salin kode Apps Script (saya akan berikan di chat berikutnya jika diminta).
+        // 4. Di editor Apps Script:
+        //    - Klik "Deploy" > "New deployment".
+        //    - Pilih Tipe: "Web app".
+        //    - "Execute as": "Me".
+        //    - "Who has access": "Anyone" (Pilih "Anyone" BUKAN "Anyone with Google account").
+        //    - Klik "Deploy".
+        // 5. Salin "Web app URL" yang diberikan.
+        // 6. Tempel (paste) URL tersebut di bawah ini, menggantikan string "..."
+        //
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        //          GANTI URL DI BAWAH INI DENGAN URL WEB APP ANDA
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzAXCDWOawi37j4GJvLllfiaa5yNsb99b28-C6es5GSTpOFrSqIj81hxP3sX_o4XiC2iQ/exec";
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        
+        let currentChart = null;
+        let currentUser = null;
+        
+        // Cache data dari Google Sheet
+        let dataCache = {
+            kpis: null,
+            evals: null,
+            feedbacks: null
+        };
+        
+        // ===================================================================
+        // DATABASE LOKAL (FALLBACK)
+        // ===================================================================
+        const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+        const formatPerDay = (amount) => `${formatCurrency(amount)} / hari`;
+        const formatPerMonth = (amount) => `${formatCurrency(amount)} / bulan`;
+
+        const employeeDB = {
+            "manager": { id: "manager", name: "Manager", role: "Manager", position: "Manager", password: "admin123" },
+            "h.hidayaturahman": { id: "h.hidayaturahman", name: "Hidayaturahman", role: "Manager", position: "Koordinator", password: "Dayat17" },
+            "i.ilham": { id: "i.ilham", name: "Ilham Ali Naufal", role: "Karyawan", position: "Pramusaji", password: "Ilhamali12" },
+            "m.zikrillah": { id: "m.zikrillah", name: "Muhammad Zikrillah", role: "Karyawan", position: "Pramusaji", password: "Zikri12" },
+            "r.renita": { id: "r.renita", name: "Renita Aulia Jasmin", role: "Karyawan", position: "Barista", password: "Jejess15" },
+            "r.rifky": { id: "r.rifky", name: "Rifky Arya Ramadhani", role: "Karyawan", position: "Pramusaji", password: "Rifky123" },
+            "a.maulidan": { id: "a.maulidan", name: "Ahmad Maulidan Noor", role: "Karyawan", position: "Barista", password: "Ahmad24062006" },
+            "r.rusdhani": { id: "r.rusdhani", name: "Rusdhani", role: "Karyawan", position: "Kasir", password: "Irud2006" },
+            "f.fitri": { id: "f.fitri", name: "Fitri Ainur Sabita", role: "Karyawan", position: "Koki", password: "Fitri2005" },
+            "s.shada": { id: "s.shada", name: "Shada Amalia", role: "Karyawan", position: "Koki", password: "Shada454545" },
+            "o.ovy": { id: "o.ovy", name: "Ovy Putri Novia", role: "Karyawan", position: "Koki", password: "10" },
+            "j.jihan": { id: "j.jihan", name: "Jihan Permata Sari", role: "Karyawan", position: "Kasir", password: "07" },
+            "s.samlawi": { id: "s.samlawi", name: "Samlawi", role: "Karyawan", position: "Barista", password: "samlawiaja04" },
+            "i.iqbal": { id: "i.iqbal", name: "Iqbal Arasyid", role: "Karyawan", position: "Koki", password: "Iqbal29" },
+            "a.ansyari": { id: "a.ansyari", name: "Ansyari Fachmi Ridhani", role: "Karyawan", position: "Barista", password: "pami2007" },
+            "n.nahjatus": { id: "n.nahjatus", name: "Nahjatus Sabela", role: "Karyawan", position: "Kasir", password: "Bela0205" },
+            "k.komang": { id: "k.komang", name: "Komang sri yati utami", role: "Karyawan", position: "Koki", password: "29" }
+        };
+        
+        const careerPaths = {
+            "Pramusaji": [
+                { level: 1, title: "Pramusaji Junior", salary: formatPerDay(40000), competencies: ["Dasar pelayanan", "Kenal menu", "Kebersihan area"], nextLevel: "Memahami 1 skill dasar (Kasir/Bar) (3 bulan)" },
+                { level: 2, title: "Pramusaji Senior", salary: formatPerDay(45000), competencies: ["Pelayanan ahli", "Upselling", "Penanganan keluhan", "Dasar Kasir/Bar"], nextLevel: "Menguasai 2 skill (Kasir & Bar) (6 bulan)" },
+                { level: 3, title: "Captain Floor", salary: formatPerMonth(3500000), competencies: ["Supervisi shift", "Manajemen tim kecil", "Training junior"], nextLevel: "Promosi ke Manajer (1-2 tahun)" },
+            ],
+            "Kasir": [
+                { level: 1, title: "Kasir Junior", salary: formatPerDay(40000), competencies: ["Operasi POS", "Rekonsiliasi tunai", "Laporan dasar"], nextLevel: "Memahami 1 skill dasar (Pramusaji/Bar) (3 bulan)" },
+                { level: 2, title: "Kasir Senior", salary: formatPerDay(45000), competencies: ["Manajemen promo", "Laporan keuangan harian", "Dasar Pramusaji/Bar"], nextLevel: "Menguasai 2 skill (Pramusaji & Bar) (6 bulan)" },
+                { level: 3, title: "Head Kasir / Admin", salary: formatPerMonth(3500000), competencies: ["Audit kas", "Manajemen inventori", "Training junior"], nextLevel: "Promosi ke Manajer (1-2 tahun)" },
+            ],
+            "Barista": [
+                { level: 1, title: "Barista Junior", salary: formatPerDay(45000), competencies: ["Espresso & Kopi dasar", "Kenal menu minuman", "Kebersihan bar"], nextLevel: "Memahami 1 skill dasar (Kasir/Pramusaji) (3 bulan)" },
+                { level: 2, title: "Barista Senior", salary: formatPerDay(50000), competencies: ["Latte art", "Manual brew", "Kreasi minuman", "Dasar Kasir/Pramusaji"], nextLevel: "Menguasai 2 skill (Kasir & Pramusaji) (6 bulan)" },
+                { level: 3, title: "Head Barista (Leader)", salary: formatPerMonth(3500000), competencies: ["Manajemen stok bar", "Kontrol kualitas", "Training junior", "Desain menu"], nextLevel: "Promosi ke Manajer (1-2 tahun)" },
+            ],
+            "Koki": [
+                { level: 1, title: "Cook Helper / Junior", salary: formatPerDay(45000), competencies: ["Mise en place", "Dasar memasak", "Kebersihan dapur"], nextLevel: "Menguasai 1 stasiun (misal: Appetizer) (3 bulan)" },
+                { level: 2, title: "Koki Stasiun (CDP)", salary: formatPerDay(55000), competencies: ["Menguasai 1-2 stasiun", "Konsistensi rasa", "Kontrol porsi"], nextLevel: "Menguasai semua stasiun (6-12 bulan)" },
+                { level: 3, title: "Head Chef / Sous Chef", salary: formatPerMonth(4000000), competencies: ["Manajemen dapur", "Manajemen stok", "Kontrol HPP", "Training tim"], nextLevel: "Promosi ke Manajer (1-2 tahun)" },
+            ],
+            "Koordinator": [
+                { level: 1, title: "Koordinator / Asisten Manajer", salary: formatPerMonth(3500000), competencies: ["Supervisi harian", "Manajemen shift", "Pelaporan dasar"], nextLevel: "Menguasai P&L dan manajemen tim penuh (1-2 tahun)" },
+                { level: 2, title: "Manajer Cafe", salary: formatPerMonth(5000000), competencies: ["Manajemen P&L", "Marketing", "Rekrutmen", "Manajemen penuh"], nextLevel: "" },
+            ],
+            "Manager": [
+                { level: 1, title: "Manajer Cafe", salary: formatPerMonth(5000000), competencies: ["Manajemen P&L", "Marketing", "Rekrutmen", "Manajemen penuh"], nextLevel: "" }
+            ]
+        };
+
+        // ===================================================================
+        // FUNGSI NAVIGASI & UI
+        // ===================================================================
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+            document.getElementById(pageId).classList.remove('hidden');
+            
+            if (pageId === 'loginPage') {
+                document.getElementById('logoutButton').classList.add('hidden');
+                document.getElementById('userInfo').innerHTML = '';
+            } else {
+                document.getElementById('logoutButton').classList.remove('hidden');
+            }
+            window.scrollTo(0, 0);
+        }
+
+        function showSubPage(pagePrefix, subPageId, clickedButton) {
+            document.querySelectorAll(`.${pagePrefix}-sub-page`).forEach(page => page.classList.add('hidden'));
+            document.getElementById(subPageId).classList.remove('hidden');
+            
+            document.querySelectorAll(`.${pagePrefix}-sub-page`).forEach(page => page.classList.add('hidden'));
+            document.getElementById(subPageId).classList.remove('hidden');
+            
+            // Perbarui tab aktif
+            const navContainer = clickedButton ? clickedButton.closest('div') : null;
+            if (navContainer) {
+                navContainer.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('nav-tab-active'));
+                clickedButton.classList.add('nav-tab-active');
+            }
+        }
+
+        function showEmployeeSubPage(subPageId) {
+            const btn = event.target.closest('button');
+            showSubPage('employee', subPageId, btn);
+            if (subPageId === 'employeeCareer') loadEmployeeCareerPath();
+            if (subPageId === 'employeeEvals') loadEmployeeEvals();
+        }
+        
+        function showManagerSubPage(subPageId, btn) {
+            const button = btn || event.target.closest('button');
+            showSubPage('manager', subPageId, button);
+            if (subPageId === 'managerHome') loadManagerDashboard();
+            if (subPageId === 'managerFeedback') loadManagerFeedback();
+        }
+
+        function handleLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const user = employeeDB[username];
+            const errorEl = document.getElementById('loginError');
+
+            if (user && user.password === password) {
+                currentUser = user;
+                errorEl.classList.add('hidden');
+                document.getElementById('userInfo').innerHTML = `Halo, <span class="font-semibold">${user.name}</span> <br> (${user.position})`;
+
+                if (user.role === 'Manager') {
+                    showPage('managerPage');
+                    showManagerSubPage('managerHome', document.querySelector('#managerPage .nav-tab'));
+                } else if (user.role === 'Karyawan') {
+                    showPage('employeePage');
+                    showEmployeeSubPage('employeeKpi', document.querySelector('#employeePage .nav-tab'));
+                }
+            } else {
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('password').value = '';
+            document.getElementById('username').value = '';
+            showPage('loginPage');
+            dataCache = { kpis: null, evals: null, feedbacks: null };
+        }
+
+        function populateUsernameSelect() {
+             const select = document.getElementById('username');
+             select.innerHTML = '<option value="">-- Pilih Nama Anda --</option>';
+             Object.values(employeeDB).forEach(emp => {
+                const option = document.createElement('option');
+                option.value = emp.id;
+                option.textContent = `${emp.name} (${emp.position})`;
+                select.appendChild(option);
+            });
+        }
+        
+        function populateEmployeeSelects() {
+            const selects = [
+                document.getElementById('evalEmployeeSelect'),
+                document.getElementById('analysisEmployeeSelect')
+            ];
+            
+            selects.forEach(select => {
+                if (!select) return;
+                select.innerHTML = '<option value="">-- Pilih Karyawan --</option>';
+                Object.values(employeeDB).forEach(emp => {
+                    if (emp.role === 'Karyawan') {
+                        const option = document.createElement('option');
+                        option.value = emp.id;
+                        option.textContent = `${emp.name} (${emp.position})`;
+                        select.appendChild(option);
+                    }
+                });
+            });
+        }
+
+        function loadEmployeeCareerPath() {
+            const pathContainer = document.getElementById('careerPathDetails');
+            const position = currentUser.position;
+            const pathData = careerPaths[position];
+            
+            if (!pathData) {
+                pathContainer.innerHTML = '<p>Jenjang karir untuk posisi Anda belum didefinisikan.</p>';
+                return;
+            }
+
+            let html = `<h4 class="text-lg font-semibold text-gray-800 mb-4">Posisi: ${position}</h4>`;
+            html += '<div class="space-y-6">';
+
+            pathData.forEach((level, index) => {
+                const isCurrent = index === 0; // Asumsi level 1 adalah saat ini
+                html += `
+                    <div class="border ${isCurrent ? 'border-teal-200 bg-teal-50 shadow-lg' : 'border-gray-200 bg-white'} p-5 rounded-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xl font-bold ${isCurrent ? 'text-teal-700' : 'text-slate-700'}">${level.title}</span>
+                            <span class="text-sm font-semibold ${isCurrent ? 'text-teal-600' : 'text-slate-500'}">Level ${level.level} ${isCurrent ? '(Posisi Anda)' : ''}</span>
+                        </div>
+                        <p class="font-semibold text-lg ${isCurrent ? 'text-teal-800' : 'text-slate-600'} mb-3">${level.salary}</p>
+                        
+                        <h5 class="font-semibold text-slate-700 mb-2 mt-4">Kompetensi Utama:</h5>
+                        <ul class="list-disc list-inside text-slate-600 space-y-1 mb-3">
+                            ${level.competencies.map(c => `<li>${c}</li>`).join('')}
+                        </ul>
+                        
+                        ${level.nextLevel ? `
+                        <div class="mt-4 border-t border-gray-300 pt-3">
+                            <h5 class="font-semibold text-slate-700 mb-1">Jalur ke Level Berikutnya:</h5>
+                            <p class="text-slate-600">${level.nextLevel}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            html += '</div>';
+            pathContainer.innerHTML = html;
+        }
+
+        // ===================================================================
+        // FUNGSI KIRIM DATA (WRITE) ke Google Sheet
+        // ===================================================================
+
+        async function submitData(action, data, buttonId, thanksId, errorId) {
+            const button = document.getElementById(buttonId);
+            const thanksEl = document.getElementById(thanksId);
+            const errorEl = document.getElementById(errorId);
+            
+            thanksEl.classList.add('hidden');
+            errorEl.classList.add('hidden');
+            
+            if (!GOOGLE_APP_SCRIPT_URL) {
+                console.error("GOOGLE_APP_SCRIPT_URL belum diisi.");
+                errorEl.textContent = "Error: Integrasi Google Sheet belum diatur oleh administrator.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            button.disabled = true;
+            button.textContent = "Mengirim...";
+            
+            try {
+                const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action, data })
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    thanksEl.classList.remove('hidden');
+                    if (action === "addFeedback") document.getElementById('customerForm').reset();
+                    if (action === "addKpi") document.getElementById('kpiForm').reset();
+                    if (action === "addEvaluation") document.getElementById('managerEvalForm').reset();
+                    
+                    if (action === 'addFeedback') dataCache.feedbacks = null;
+                    if (action === 'addKpi') dataCache.kpis = null;
+                    if (action === 'addEvaluation') dataCache.evals = null;
+
+                    setTimeout(() => thanksEl.classList.add('hidden'), 3000);
+                } else {
+                    throw new Error(result.message || "Gagal mengirim data.");
+                }
+
+            } catch (error) {
+                console.error("Gagal mengirim data:", error);
+                errorEl.textContent = `Error: ${error.message}. Cek konsol untuk detail.`;
+                errorEl.classList.remove('hidden');
+            } finally {
+                button.disabled = false;
+                if (action === "addFeedback") button.textContent = "Kirim Feedback";
+                if (action === "addKpi") button.textContent = "Kirim Laporan KPI";
+                if (action === "addEvaluation") button.textContent = "Simpan Evaluasi";
+            }
+        }
+
+        function submitCustomerFeedback() {
+            const form = document.getElementById('customerForm');
+            const data = {
+                timestamp: new Date().toISOString(),
+                overall: form.overall.value,
+                food: document.getElementById('ratingFood').value,
+                drink: document.getElementById('ratingDrink').value,
+                service: document.getElementById('ratingService').value,
+                comment: document.getElementById('customerComment').value
+            };
+            submitData("addFeedback", data, "customerSubmitButton", "customerThanks", "customerError");
+        }
+        
+        function submitKpiForm() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                employeeId: currentUser.id,
+                employeeName: currentUser.name,
+                target: document.getElementById('kpiTarget').value,
+                actual: document.getElementById('kpiActual').value,
+                rating: document.getElementById('kpiSelfRating').value,
+                comment: document.getElementById('kpiComment').value
+            };
+            submitData("addKpi", data, "kpiSubmitButton", "kpiThanks", "kpiError");
+        }
+        
+        function submitManagerEvaluation() {
+            const employeeId = document.getElementById('evalEmployeeSelect').value;
+            if (!employeeId) {
+                alert("Silakan pilih karyawan yang akan dievaluasi.");
+                return;
+            }
+            const data = {
+                timestamp: new Date().toISOString(),
+                evaluatorId: currentUser.id,
+                evaluatorName: currentUser.name,
+                employeeId: employeeId,
+                employeeName: employeeDB[employeeId].name,
+                quality: document.getElementById('evalQuality').value,
+                speed: document.getElementById('evalSpeed').value,
+                service: document.getElementById('evalService').value,
+                teamwork: document.getElementById('evalTeamwork').value,
+                comment: document.getElementById('evalComment').value
+            };
+            submitData("addEvaluation", data, "evalSubmitButton", "evalThanks", "evalError");
+        }
+
+        // ===================================================================
+        // FUNGSI AMBIL DATA (READ) dari Google Sheet
+        // ===================================================================
+
+        async function fetchData(action) {
+            if (!GOOGLE_APP_SCRIPT_URL) {
+                console.warn("GOOGLE_APP_SCRIPT_URL belum diisi. Menggunakan mock data.");
+                return new Promise(resolve => resolve([])); // Kembalikan array kosong
+            }
+            
+            if (dataCache[action]) {
+                return dataCache[action];
+            }
+
+            try {
+                const response = await fetch(`${GOOGLE_APP_SCRIPT_URL}?action=${action}`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    redirect: 'follow'
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    dataCache[action] = result.data; // Simpan ke cache
+                    return result.data;
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error(`Gagal mengambil data ${action}:`, error);
+                return []; // Kembalikan array kosong jika error
+            }
+        }
+
+        async function loadManagerFeedback() {
+            const loader = document.getElementById('feedbackLoader');
+            const list = document.getElementById('feedbackList');
+            loader.classList.remove('hidden');
+            list.innerHTML = '';
+
+            const feedbacks = await fetchData('feedbacks');
+            loader.classList.add('hidden');
+
+            if (feedbacks.length === 0) {
+                list.innerHTML = '<p class="text-slate-500 text-center">Belum ada feedback dari pelanggan.</p>';
+                return;
+            }
+
+            feedbacks.reverse().forEach(fb => { // Tampilkan yang terbaru dulu
+                let borderColorClass = 'feedback-card-ok'; // Default (3)
+                if (fb.overall >= 4) {
+                    borderColorClass = 'feedback-card-good';
+                } else if (fb.overall <= 2) {
+                    borderColorClass = 'feedback-card-bad';
+                }
+            
+                list.innerHTML += `
+                    <div class="bg-white border border-gray-200 p-4 rounded-lg shadow-sm border-l-4 ${borderColorClass}">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="font-semibold text-teal-700">Rating Keseluruhan: ${fb.overall} / 5</p>
+                            <span class="text-xs text-gray-500">${new Date(fb.timestamp).toLocaleDateString('id-ID')}</span>
+                        </div>
+                        <p class="text-slate-700 mb-2">"${fb.comment || 'Tidak ada komentar.'}"</p>
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+                            <span>Makanan: ${fb.food}/5</span>
+                            <span>Minuman: ${fb.drink}/5</span>
+                            <span>Servis: ${fb.service}/5</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        async function loadEmployeeEvals() {
+            const loader = document.getElementById('employeeEvalLoader');
+            const content = document.getElementById('employeeEvalContent');
+            loader.classList.remove('hidden');
+            content.innerHTML = '';
+
+            const [evals, feedbacks] = await Promise.all([
+                fetchData('evals'),
+                fetchData('feedbacks')
+            ]);
+            
+            loader.classList.add('hidden');
+            
+            // Tampilkan Evaluasi Manajer
+            const myEvals = evals.filter(e => e.employeeId === currentUser.id).reverse();
+            let html = '<h4 class="text-lg font-semibold text-gray-800 mb-3">Evaluasi dari Manajer</h4>';
+            if (myEvals.length > 0) {
+                myEvals.forEach(ev => {
+                    html += `
+                        <div class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm mb-4">
+                            <p class="font-semibold text-teal-700">${new Date(ev.timestamp).toLocaleDateString('id-ID', { year: 'numeric', month: 'long' })} - oleh ${ev.evaluatorName}</p>
+                            <p class="text-slate-700 my-2">"${ev.comment}"</p>
+                            <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+                                <span>Kualitas: ${ev.quality}/5</span>
+                                <span>Kecepatan: ${ev.speed}/5</span>
+                                <span>Servis: ${ev.service}/5</span>
+                                <span>Tim: ${ev.teamwork}/5</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p class="text-slate-500">Belum ada evaluasi dari manajer.</p>';
+            }
+            
+            // Tampilkan Feedback Pelanggan (Ringkasan)
+            html += '<h4 class="text-lg font-semibold text-gray-800 mb-3 mt-8">Ringkasan Feedback Pelanggan</h4>';
+            if (feedbacks.length > 0) {
+                const avgService = feedbacks.reduce((acc, fb) => acc + parseInt(fb.service), 0) / feedbacks.length;
+                html += `<p class="text-slate-600">Rata-rata rating pelayanan dari ${feedbacks.length} pelanggan terakhir: <span class="font-bold text-lg text-teal-700">${avgService.toFixed(1)} / 5</span></p>`;
+            } else {
+                html += '<p class="text-slate-500">Belum ada feedback dari pelanggan.</p>';
+            }
+            
+            content.innerHTML = html;
+        }
+        
+        async function loadManagerDashboard() {
+            const employeeCount = Object.values(employeeDB).filter(e => e.role === 'Karyawan').length;
+            document.getElementById('managerEmployeeCount').textContent = employeeCount;
+            
+            const [feedbacks, kpis] = await Promise.all([
+                fetchData('feedbacks'),
+                fetchData('kpis')
+            ]);
+            
+            document.getElementById('managerFeedbackCount').textContent = feedbacks.length;
+            document.getElementById('managerKpiCount').textContent = kpis.length;
+            
+            let avgRating = "N/A";
+            if(feedbacks.length > 0) {
+                avgRating = (feedbacks.reduce((acc, fb) => acc + parseInt(fb.overall), 0) / feedbacks.length).toFixed(1);
+            }
+            document.getElementById('managerAvgRating').textContent = avgRating;
+        }
+
+        async function showEmployeeAnalysis(employeeId) {
+            const contentDiv = document.getElementById('analysisContent');
+            const loader = document.getElementById('analysisLoader');
+            
+            if (!employeeId) {
+                contentDiv.classList.add('hidden');
+                return;
+            }
+            
+            contentDiv.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            const employee = employeeDB[employeeId];
+            
+            const [kpis, evals, feedbacks] = await Promise.all([
+                fetchData('kpis'),
+                fetchData('evals'),
+                fetchData('feedbacks')
+            ]);
+
+            const myKpi = kpis.filter(k => k.employeeId === employeeId).pop() || {};
+            const myEval = evals.filter(e => e.employeeId === employeeId).pop() || {};
+            
+            let avgService = "N/A";
+            if(feedbacks.length > 0) {
+                avgService = (feedbacks.reduce((acc, fb) => acc + parseInt(fb.service), 0) / feedbacks.length).toFixed(1) + " / 5";
+            }
+            
+            document.getElementById('analysisName').textContent = `Analisis untuk: ${employee.name} (${employee.position})`;
+            
+            // Populate Career Path
+            const careerContainer = document.getElementById('analysisCareerPath');
+            const careerData = careerPaths[employee.position];
+            const currentLevel = careerData[0];
+            const nextLevel = careerData[1];
+            
+            let careerHtml = `
+                <div class="mb-4">
+                    <h6 class="font-semibold text-gray-700">Posisi Saat Ini</h6>
+                    <p class="text-slate-600">${currentLevel.title} (${currentLevel.salary})</p>
+                </div>
+            `;
+            if (nextLevel) {
+                 careerHtml += `
+                    <div>
+                        <h6 class="font-semibold text-gray-700">Level Berikutnya</h6>
+                        <p class="text-slate-600">${nextLevel.title} (${nextLevel.salary})</p>
+                        <p class="text-sm text-slate-500 mt-1">Syarat: ${currentLevel.nextLevel}</p>
+                    </div>
+                `;
+            }
+            careerContainer.innerHTML = careerHtml;
+
+            // Populate summary data
+            document.getElementById('analysisCustomerFeedback').textContent = avgService;
+            document.getElementById('analysisKpi').textContent = myKpi.comment || "Belum lapor KPI";
+            document.getElementById('analysisManagerEval').textContent = myEval.comment || "Belum dievaluasi";
+
+            const chartData = [
+                parseInt(myEval.quality || 0),
+                parseInt(myEval.speed || 0),
+                parseInt(myEval.service || 0),
+                parseInt(myEval.teamwork || 0)
+            ];
+
+            // Update Chart
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            currentChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Kualitas Kerja', 'Kecepatan', 'Pelayanan', 'Kerjasama Tim'],
+                    datasets: [{
+                        label: `Kinerja ${employee.name}`,
+                        data: chartData,
+                        backgroundColor: 'rgba(13, 148, 136, 0.2)',
+                        borderColor: 'rgba(13, 148, 136, 1)',
+                        pointBackgroundColor: 'rgba(13, 148, 136, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(13, 148, 136, 1)'
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                            grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                            pointLabels: { font: { size: 13, weight: '500' }, color: '#334155' },
+                            ticks: { beginAtZero: true, max: 5, min: 0, stepSize: 1, backdropColor: 'rgba(255, 255, 255, 0.7)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { size: 14 } } }
+                    }
+                }
+            });
+
+            loader.classList.add('hidden');
+            contentDiv.classList.remove('hidden');
+        }
+
+        // Initialize the app
+        window.onload = () => {
+            populateUsernameSelect();
+            populateEmployeeSelects();
+            showPage('loginPage');
+        };
+    </script>
+</body>
+</html>
