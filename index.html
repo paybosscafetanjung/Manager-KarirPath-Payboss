@@ -3,159 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TalentFlow - Manajemen Talenta</title>
+    <title>TalentFlow V3.4 - KPI Calculator</title>
     
     <!-- 1. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
-        /* Menambahkan font Inter yang modern */
-        body {
-            font-family: "Inter", sans-serif;
-        }
+        /* Font Inter Modern */
+        body { font-family: "Inter", sans-serif; }
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap');
         
-        /* Custom scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 12px;
-            height: 12px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9; /* bg-slate-100 */
-        }
-        ::-webkit-scrollbar-thumb {
-            background-color: #94a3b8; /* bg-slate-400 */
-            border-radius: 6px;
-            border: 3px solid #f1f5f9; /* bg-slate-100 */
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background-color: #64748b; /* bg-slate-500 */
-        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background-color: #94a3b8; border-radius: 5px; border: 2px solid #f1f5f9; }
+        ::-webkit-scrollbar-thumb:hover { background-color: #64748b; }
         
-        /* Animasi spin */
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
+        /* Animasi Spin */
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
+
+        /* Badge Tunjangan */
+        .allowance-badge { background-color: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; }
+        
+        /* Input KPI kecil */
+        .kpi-input { width: 60px; padding: 4px; text-align: center; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: bold; color: #2563eb; }
+        .kpi-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-50 text-slate-800">
     
-    <!-- Ini adalah tempat aplikasi React akan dimuat -->
     <div id="root">
-        <!-- Pesan pemuatan awal -->
+        <!-- Loading Screen -->
         <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column; gap: 1rem;">
-            <svg width="60" height="60" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: #2563eb;">
-                <path d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity=".25"/>
-                <path d="M10.14,1.16a11,11,0,0,0-9,8.92A1.59,1.59,0,0,0,2.46,12,1.52,1.52,0,0,0,4.11,10.7a8,8,0,0,1,6.66-6.61A1.42,1.42,0,0,0,12,2.69h0A1.57,1.57,0,0,0,10.14,1.16Z" fill="currentColor">
-                    <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.75s" repeatCount="indefinite"/>
-                </path>
+            <svg class="animate-spin" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
             </svg>
-            <p style="font-size: 1.125rem; font-medium; color: #374151;">Memuat Pustaka Aplikasi...</p>
+            <p style="font-size: 1.125rem; color: #4b5563; font-weight: 500;">Memuat TalentFlow V3.4 (Calculator)...</p>
         </div>
     </div>
 
-    <!-- 
-      Skrip-skrip ini HARUS dimuat secara berurutan di akhir <body>
-    -->
-
-    <!-- 1. React Libraries (React HARUS dimuat pertama) -->
+    <!-- React Dependencies -->
     <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
     <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
-    
-    <!-- 2. Babel (Untuk menjalankan JSX di browser) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.0/babel.min.js"></script>
 
-    <!-- 
-      Semua kode React, termasuk pemicu render,
-      HARUS berada di dalam SATU blok "text/babel".
-    -->
     <script type="text/babel">
     
-        // Mengambil hook dari global React
         const { useState, useEffect, useMemo } = React;
         
-        // ! PENTING: URL Aplikasi Web Google Apps Script Anda
-        const PLACEHOLDER_URL = "https://script.google.com/macros/s/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/exec";
+        // ! URL DATA GOOGLE SHEET ASLI ANDA
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDFublUreE_xQ5tDHe9dw2WFtJOJz7-Jn6KPihpW1yYex3Dn2RQ0jyZ2pDD8hjZrKT/exec";
 
-        // --- PERBAIKAN: Ikon SVG Disematkan Langsung ---
-        // Ini adalah komponen React sederhana yang menggantikan pustaka Lucide eksternal
-        
+        // --- Helper: Icon Creator ---
         const createIcon = (svgContent) => (props) => (
           React.createElement('svg', {
             xmlns: "http://www.w3.org/2000/svg",
-            width: props.size || 24,
-            height: props.size || 24,
-            viewBox: "0 0 24 24",
-            fill: "none",
-            stroke: "currentColor",
-            strokeWidth: 2,
-            strokeLinecap: "round",
-            strokeLinejoin: "round",
-            className: props.className,
-            onClick: props.onClick,
+            width: props.size || 24, height: props.size || 24, viewBox: "0 0 24 24",
+            fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round",
+            className: props.className, onClick: props.onClick,
             dangerouslySetInnerHTML: { __html: svgContent }
           })
         );
 
-        const IconUsers = createIcon('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>');
-        const IconTrendingUp = createIcon('<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>');
-        const IconAward = createIcon('<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>');
-        const IconDollarSign = createIcon('<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>');
-        const IconPlus = createIcon('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>');
-        const IconEdit2 = createIcon('<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>');
-        const IconX = createIcon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>');
-        const IconLoader2 = createIcon('<path d="M21 12a9 9 0 1 1-6.219-8.56"/>');
-        const IconAlertTriangle = createIcon('<path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>');
-        const IconCheckCircle = createIcon('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>');
-        
-        // --- IKON BARU UNTUK TAB PANDUAN ---
-        const IconBookOpen = createIcon('<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>');
-        
-        // --- IKON BARU UNTUK TAB TINJAUAN KINERJA ---
-        const IconClipboardCheck = createIcon('<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/>');
-        
-        // --- Akhir Ikon SVG ---
+        // --- Definisi Ikon ---
+        const Icons = {
+            Users: createIcon('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>'),
+            TrendingUp: createIcon('<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>'),
+            Award: createIcon('<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>'),
+            DollarSign: createIcon('<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'),
+            Plus: createIcon('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>'),
+            Edit2: createIcon('<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>'),
+            X: createIcon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),
+            Loader2: createIcon('<path d="M21 12a9 9 0 1 1-6.219-8.56"/>'),
+            AlertTriangle: createIcon('<path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'),
+            CheckCircle: createIcon('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'),
+            BookOpen: createIcon('<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'),
+            ClipboardCheck: createIcon('<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/>'),
+            Clock: createIcon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'),
+            Layers: createIcon('<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'),
+            List: createIcon('<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>'),
+            Zap: createIcon('<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'),
+            Save: createIcon('<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>')
+        };
 
+        // --- DATA MASTER: STANDARD KPI ---
+        const KPI_STANDARDS = {
+            'Chef': [
+                { kpi: 'Refire Rate', weight: 40, target: '0 Piring', desc: 'Masakan dikembalikan tamu karena salah masak.' },
+                { kpi: 'Ticket Time', weight: 30, target: '< 15 Menit', desc: 'Kecepatan dari bon diterima sampai selesai.' },
+                { kpi: 'Food Waste', weight: 20, target: '< 2% Stok', desc: 'Efisiensi bahan baku.' },
+                { kpi: 'Kebersihan', weight: 10, target: 'Score 90+', desc: 'Audit kebersihan station.' }
+            ],
+            'Pramusaji': [
+                { kpi: 'Komplain Tamu', weight: 35, target: '0 Komplain', desc: 'Keluhan layanan/sikap.' },
+                { kpi: 'Akurasi Order', weight: 25, target: '100% Akurat', desc: 'Kesalahan input POS/antar.' },
+                { kpi: 'Upselling', weight: 25, target: 'Target Sales', desc: 'Penjualan menu tambahan.' },
+                { kpi: 'Respon Time', weight: 15, target: 'Segera', desc: 'Kecepatan menyambut & menu.' }
+            ],
+            'Bartender': [
+                { kpi: 'Selisih Stok', weight: 40, target: '0 Botol', desc: 'Fisik vs Sistem POS.' },
+                { kpi: 'Konsistensi', weight: 30, target: '0 Komplain', desc: 'Rasa sesuai resep standar.' },
+                { kpi: 'Speed Service', weight: 20, target: '< 5 Menit', desc: 'Kecepatan pembuatan minuman.' },
+                { kpi: 'Kebersihan', weight: 10, target: 'Score 90+', desc: 'Area bar & gelas.' }
+            ],
+            'Kasir': [
+                { kpi: 'Selisih Kas', weight: 50, target: 'Rp 0 (Nihil)', desc: 'Uang fisik vs Laporan.' },
+                { kpi: 'Speed Transaksi', weight: 20, target: '< 2 Menit', desc: 'Antrian pembayaran.' },
+                { kpi: 'Laporan', weight: 20, target: '100% Lengkap', desc: 'Settlement EDC & Rekap.' },
+                { kpi: 'Sapaan', weight: 10, target: '100% Sapa', desc: 'Standar layanan sapa.' }
+            ],
+            'Koordinator': [
+                { kpi: 'Audit Ops', weight: 40, target: 'Score 95+', desc: 'Standar resto keseluruhan.' },
+                { kpi: 'Komplain', weight: 30, target: '100% Tuntas', desc: 'Penyelesaian masalah di tempat.' },
+                { kpi: 'Disiplin Tim', weight: 20, target: '0 Telat', desc: 'Absensi tim bawahan.' },
+                { kpi: 'Laporan', weight: 10, target: 'Tepat Waktu', desc: 'Admin & reporting.' }
+            ]
+        };
 
         const App = () => {
-        
-          // PERBAIKAN: Gunakan komponen SVG yang baru saja kita definisikan
-          const { Users, TrendingUp, Award, DollarSign, Plus, Edit2, X, Loader2, AlertTriangle, CheckCircle, BookOpen, ClipboardCheck } = {
-            Users: IconUsers,
-            TrendingUp: IconTrendingUp,
-            Award: IconAward,
-            DollarSign: IconDollarSign,
-            Plus: IconPlus,
-            Edit2: IconEdit2,
-            X: IconX,
-            Loader2: IconLoader2,
-            AlertTriangle: IconAlertTriangle,
-            CheckCircle: IconCheckCircle,
-            BookOpen: IconBookOpen, // Tambahkan ikon baru
-            ClipboardCheck: IconClipboardCheck // Tambahkan ikon baru
-          };
-
           const [activeTab, setActiveTab] = useState('dashboard');
           const [employees, setEmployees] = useState([]);
           const [competencies, setCompetencies] = useState([]);
+          
           const [showAddModal, setShowAddModal] = useState(false);
+          const [editingEmployee, setEditingEmployee] = useState(null);
+          const [reviewingEmployee, setReviewingEmployee] = useState(null);
           const [editingCell, setEditingCell] = useState(null);
-          
-          // State baru untuk modal edit karyawan
-          const [editingEmployee, setEditingEmployee] = useState(null); // null atau objek karyawan
-          
-          // State baru untuk modal tinjauan kinerja
-          const [reviewingEmployee, setReviewingEmployee] = useState(null); // null atau objek karyawan
           
           const [isLoading, setIsLoading] = useState(true);
           const [error, setError] = useState(null);
 
-          // Position-specific competencies
           const positionCompetencies = {
             'Pramusaji': ['Layanan Pelanggan', 'Komunikasi', 'Multitasking', 'Pengetahuan Menu'],
             'Bartender': ['Mixology', 'Kreativitas', 'Kecepatan', 'HACCP'],
@@ -172,300 +150,208 @@
             'Koordinator': ['Supervisor', 'Manager', 'Head of Operations']
           };
 
-          // Load data from Google Sheet
-          useEffect(() => {
-            if (SCRIPT_URL === PLACEHOLDER_URL) {
-              setError("KONFIGURASI DIPERLUKAN: Ganti 'SCRIPT_URL' di baris 5 file ini dengan URL Google Apps Script Anda yang sudah di-deploy.");
-              setIsLoading(false);
-              return;
-            }
-            loadData();
-          }, []);
-          
-          /**
-           * Fungsi helper untuk fetch call ke Google Apps Script
-           */
+          const calculateWeightedScore = (score, attendance) => {
+             const s = parseInt(score) || 0;
+             const a = parseInt(attendance) || 0;
+             return Math.round((s * 0.7) + (a * 0.3));
+          };
+
           const callAppsScript = async (action, data) => {
             setIsLoading(true);
             setError(null);
-            
             try {
               const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
                 mode: 'cors',
                 redirect: 'follow',
-                headers: {
-                  'Content-Type': 'text/plain;charset=UTF-8',
-                },
+                headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
                 body: JSON.stringify({ action, data })
               });
-
-              if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-              }
               
+              if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
               const result = await response.json();
-              
-              if (result.status === 'error') {
-                throw new Error(result.message || "Terjadi error di Apps Script");
-              }
+              if (result.status === 'error') throw new Error(result.message || "Error Apps Script");
               
               return result;
-
             } catch (err) {
-              console.error(`Error during action '${action}':`, err);
-              let errorMsg = `Gagal ${action}: ${err.message}.`;
-              if (err.message.includes("Failed to fetch")) {
-                errorMsg += " INI MASALAH YANG SANGAT UMUM: 1) Pastikan Anda me-REDEPLOY Apps Script sebagai 'Versi BARU'. 2) Pastikan 'Siapa yang memiliki akses' adalah 'Siapa saja'.";
-              }
-              setError(errorMsg + " Periksa konsol untuk detail.");
-              setIsLoading(false); // Pastikan loading berhenti jika ada error
-              return null; // Kembalikan null jika gagal
+              console.error(`Error ${action}:`, err);
+              setError(`Gagal ${action}: ${err.message}`);
+              setIsLoading(false);
+              return null;
             }
           };
 
+          useEffect(() => { loadData(); }, []);
+
           const loadData = async () => {
             const result = await callAppsScript('loadData', {});
+            
             if (result && result.status === 'success') {
-              const parsedEmployees = result.employees.map(emp => ({
-                ...emp,
-                score: parseInt(emp.score, 10),
-                salary: parseInt(emp.salary, 10)
-              }));
-              
-              const parsedCompetencies = result.competencies.map(comp => ({
-                ...comp,
-                level: parseInt(comp.level, 10)
-              }));
+                const parsedEmployees = result.employees.map(emp => ({
+                    ...emp,
+                    score: parseInt(emp.score, 10) || 0,
+                    salary: parseInt(emp.salary, 10) || 0,
+                    attendance: emp.attendance ? parseInt(emp.attendance, 10) : 100,
+                    position2: emp.position2 || ''
+                }));
+                
+                const parsedCompetencies = result.competencies.map(comp => ({
+                    ...comp,
+                    level: parseInt(comp.level, 10) || 1
+                }));
 
-              setEmployees(parsedEmployees);
-              setCompetencies(parsedCompetencies);
+                setEmployees(parsedEmployees);
+                setCompetencies(parsedCompetencies);
             }
             setIsLoading(false);
           };
 
-          const addEmployee = async (formData) => {
-            const newEmp = {
-              id: `emp${Date.now()}`,
-              name: formData.name,
-              position: formData.position,
-              level: formData.level,
-              score: parseInt(formData.score, 10),
-              rating: formData.rating,
-              salary: parseInt(formData.salary, 10),
-            };
-
-            const newComps = positionCompetencies[formData.position].map((skill, idx) => ({
-              id: `comp_${newEmp.id}_${idx}`,
-              employeeId: newEmp.id,
-              competency: skill,
-              level: parseInt(formData.competencies[skill] || 3, 10)
-            }));
-
-            const result = await callAppsScript('addEmployee', {
-              employee: newEmp,
-              competencies: newComps
-            });
-
-            if (result && result.status === 'success') {
-              setShowAddModal(false);
-              await loadData(); // Muat ulang data
-            } else {
-              setIsLoading(false); // Hentikan loading jika gagal
-            }
-          };
-
-          const updateCompetencyLevel = async (empId, competency, newLevel) => {
-            const comp = competencies.find(c => c.employeeId === empId && c.competency === competency);
-            if (!comp) {
-              console.error("Competency not found locally", empId, competency);
-              return;
-            }
-
-            setEditingCell(null); // Tutup modal segera
-
-            const result = await callAppsScript('updateCompetencyLevel', {
-              id: comp.id, // Kirim ID unik kompetensi
-              level: parseInt(newLevel, 10)
-            });
-
-            if (result && result.status === 'success') {
-              await loadData(); // Muat ulang data
-            } else {
-              setIsLoading(false); // Hentikan loading jika gagal
-            }
-          };
-          
-          /**
-           * Fungsi baru untuk menangani update data karyawan dari modal edit
-           */
-          const handleUpdateEmployee = async (formData) => {
-            const originalEmployee = employees.find(e => e.id === formData.id);
-            if (!originalEmployee) return;
-
-            const updatedEmployee = {
-              id: formData.id,
-              name: formData.name,
-              position: formData.position,
-              level: formData.level,
-              score: parseInt(formData.score, 10),
-              rating: formData.rating,
-              salary: parseInt(formData.salary, 10),
-            };
-
-            let action = 'updateEmployee';
-            let data = { employee: updatedEmployee };
-
-            // Cek apakah posisi berubah. Jika ya, kita perlu mengganti kompetensi.
-            if (originalEmployee.position !== updatedEmployee.position) {
-              action = 'updateEmployeeAndCompetencies';
-              const newCompetencies = positionCompetencies[updatedEmployee.position].map((skill, idx) => ({
-                id: `comp_${updatedEmployee.id}_${idx}`,
-                employeeId: updatedEmployee.id,
-                competency: skill,
-                level: 3 // Reset ke level 3 untuk kompetensi baru
-              }));
-              data.newCompetencies = newCompetencies;
-            }
-
-            const result = await callAppsScript(action, data);
-
-            if (result && result.status === 'success') {
-              setEditingEmployee(null); // Tutup modal edit
-              await loadData(); // Muat ulang data
-            } else {
-              setIsLoading(false); // Hentikan loading jika gagal
-            }
-          };
-          
-          /**
-           * Fungsi baru untuk mengirim data dari Form Tinjauan Kinerja
-           */
-          const handleSubmitReview = async (reviewData) => {
-            const result = await callAppsScript('submitPerformanceReview', reviewData);
+          const handleAddEmployee = async (formData) => {
+            const newId = `emp${Date.now()}`;
+            const newEmp = { ...formData, id: newId };
             
-            if (result && result.status === 'success') {
-              setReviewingEmployee(null); // Tutup modal tinjauan
-              await loadData(); // Muat ulang semua data
-            } else {
-              setIsLoading(false); // Hentikan loading jika gagal
+            const newComps = [];
+            const skills1 = positionCompetencies[formData.position] || [];
+            skills1.forEach((s, i) => newComps.push({ id: `comp_${newId}_1_${i}`, employeeId: newId, competency: s, level: 3 }));
+            
+            if(formData.position2) {
+                const skills2 = positionCompetencies[formData.position2] || [];
+                skills2.forEach((s, i) => newComps.push({ id: `comp_${newId}_2_${i}`, employeeId: newId, competency: s, level: 2 }));
             }
+
+            const result = await callAppsScript('addEmployee', { employee: newEmp, competencies: newComps });
+            if (result && result.status === 'success') { await loadData(); setShowAddModal(false); } 
+            else { setIsLoading(false); }
+          };
+
+          const handleUpdateEmployee = async (formData) => {
+            const result = await callAppsScript('updateEmployee', { employee: formData });
+            if (result && result.status === 'success') { setEditingEmployee(null); await loadData(); }
+            else { setIsLoading(false); }
           };
           
-          const getRatingColor = (rating) => {
-            const colors = {
-              'Luar Biasa': 'bg-green-100 text-green-800',
-              'Sangat Baik': 'bg-blue-100 text-blue-800',
-              'Baik': 'bg-yellow-100 text-yellow-800',
-              'Perlu Perbaikan': 'bg-red-100 text-red-800'
-            };
-            return colors[rating] || 'bg-gray-100 text-gray-800';
+          const handleUpdateCompetencyCell = async (empId, compName, newLevel) => {
+              const comp = competencies.find(c => c.employeeId === empId && c.competency === compName);
+              if (!comp) return;
+              setEditingCell(null); 
+              const result = await callAppsScript('updateCompetencyLevel', { id: comp.id, level: parseInt(newLevel, 10) });
+              if (result && result.status === 'success') { await loadData(); }
+              else { setIsLoading(false); }
           };
+          
+          // Handler baru untuk Simpan Review dari ModalReview
+          const handleSaveReview = async (updatedEmpData) => {
+              const result = await callAppsScript('updateEmployee', { employee: updatedEmpData });
+              if (result && result.status === 'success') {
+                  setReviewingEmployee(null);
+                  await loadData();
+              } else {
+                  setIsLoading(false);
+              }
+          };
+
+          // --- Statistik Multi-Fungsi (NEW) ---
+          const multiFuncStats = useMemo(() => {
+                const multiEmployees = employees.filter(e => e.position2);
+                const totalAllowanceCost = multiEmployees.length * 500000; // Est. 
+                const savedCost = multiEmployees.length * 2500000; // Hemat hire baru
+                return { count: multiEmployees.length, savedCost };
+          }, [employees]);
+
+          const stats = useMemo(() => {
+              const total = employees.length;
+              const avgSalary = total ? employees.reduce((acc, e) => acc + e.salary, 0) / total : 0;
+              const avgAttendance = total ? Math.round(employees.reduce((acc, e) => acc + e.attendance, 0) / total) : 0;
+              const highPerformers = employees.filter(e => calculateWeightedScore(e.score, e.attendance) >= 90).length;
+              return { total, avgSalary, avgAttendance, highPerformers };
+          }, [employees]);
 
           const getSkillColor = (level) => {
             if (level >= 4) return 'bg-green-500';
-            if (level >= 3) return 'bg-blue-500';
-            if (level >= 2) return 'bg-yellow-500';
+            if (level === 3) return 'bg-blue-500';
+            if (level === 2) return 'bg-yellow-500';
             return 'bg-red-500';
           };
 
-          const stats = {
-            total: employees.length,
-            highPerformers: employees.filter(e => e.score >= 90).length,
-            readyForPromotion: employees.filter(e => e.rating === 'Luar Biasa').length,
-            avgSalary: employees.length ? Math.round(employees.reduce((sum, e) => sum + e.salary, 0) / employees.length) : 0
-          };
-
-          const allCompetencies = [...new Set(Object.values(positionCompetencies).flat())];
-
-          const getEmployeeCompetencies = (empId) => {
-            return competencies.filter(c => c.employeeId === empId);
-          };
-
           const getAvgCompetency = (empId) => {
-            const comps = getEmployeeCompetencies(empId);
+            const comps = competencies.filter(c => c.employeeId === empId);
             return comps.length ? (comps.reduce((sum, c) => sum + c.level, 0) / comps.length).toFixed(1) : 0;
           };
 
-          const promotionCandidates = employees.filter(emp => {
-            const avgComp = parseFloat(getAvgCompetency(emp.id));
-            return emp.score >= 90 && avgComp >= 3.5 && emp.level !== 'L4-Expert';
-          });
-          
-          if (isLoading && employees.length === 0 && !error) {
-            return (
-              <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-lg shadow-xl">
-                  <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
-                  <p className="text-xl font-medium text-gray-700">Memuat data dari Google Sheet...</p>
-                </div>
-              </div>
-            );
-          }
+          const allUniqueCompetencies = [...new Set(Object.values(positionCompetencies).flat())];
 
-          if (error && SCRIPT_URL === PLACEHOLDER_URL) {
-            return (
-              <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 flex items-center justify-center p-4">
-                <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-lg shadow-xl max-w-lg text-center">
-                  <AlertTriangle className="w-16 h-16 text-red-600" />
-                  <h2 className="text-2xl font-bold text-gray-800">Konfigurasi Diperlukan</h2>
-                  <p className="text-lg font-medium text-gray-700">{error}</p>
-                  <p className="text-sm text-gray-500">
-                    Silakan ikuti petunjuk di file `Code.gs` untuk men-deploy Google Apps Script Anda dan dapatkan URL yang valid untuk ditempelkan ke dalam file `index.html` ini.
-                  </p>
-                </div>
-              </div>
-            );
-          }
+          const promotionCandidates = employees.filter(emp => {
+            const wScore = calculateWeightedScore(emp.score, emp.attendance);
+            const avgComp = parseFloat(getAvgCompetency(emp.id));
+            return wScore >= 90 && emp.attendance >= 95 && avgComp >= 3.5 && emp.level !== 'L4-Expert';
+          });
 
           return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+            <div className="min-h-screen bg-slate-50 pb-10">
+              
+              <div className="bg-white border-b px-6 py-4 sticky top-0 z-20 shadow-sm flex justify-between items-center">
+                  <div>
+                      <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                          <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-lg">TF</span> TalentFlow V3.4
+                      </h1>
+                      <div className="flex items-center gap-2 mt-1">
+                          <span className="flex h-2 w-2 relative">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                          </span>
+                          <p className="text-xs text-slate-500">Kalkulator KPI & Multi-Fungsi</p>
+                      </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => setShowAddModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm">
+                        <Icons.Plus size={18} /> <span className="hidden sm:inline">Tambah Karyawan</span>
+                    </button>
+                  </div>
+              </div>
               
               {isLoading && (
-                <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-[100]">
-                  <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-                </div>
-              )}
-
-              {error && (
-                <div className="fixed top-5 right-5 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-[101]" role="alert">
-                  <strong className="font-bold">Error! </strong>
-                  <span className="block sm:inline">{error}</span>
-                  <span className="absolute top-0 bottom-0 right-0 px-4 py-3" onClick={() => setError(null)}>
-                    <X className="w-6 h-6 fill-current" />
-                  </span>
+                <div className="fixed inset-0 bg-white/70 flex items-center justify-center z-[100] backdrop-blur-sm">
+                   <div className="bg-white p-4 rounded-xl shadow-xl flex items-center gap-3 border border-slate-100">
+                      <Icons.Loader2 className="animate-spin text-blue-600" size={24} />
+                      <span className="font-medium text-slate-700">Sinkronisasi Data...</span>
+                   </div>
                 </div>
               )}
               
-              <div className="container mx-auto p-6">
-                <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                  <h1 className="text-3xl font-bold text-gray-800 mb-2">TalentFlow</h1>
-                  <p className="text-gray-600">Sistem Manajemen Talenta - Payboss Café</p>
+              {error && (
+                <div className="fixed top-20 right-5 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg z-[101] max-w-sm">
+                  <strong className="font-bold">Error: </strong>
+                  <span className="block sm:inline text-sm">{error}</span>
+                  <button className="absolute top-0 bottom-0 right-0 px-4 py-3" onClick={()=>setError(null)}><Icons.X size={16}/></button>
                 </div>
+              )}
 
-                <div className="bg-white rounded-lg shadow-lg mb-6">
-                  <div className="flex overflow-x-auto">
+              <div className="container mx-auto p-4 sm:p-6 max-w-7xl">
+                
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 overflow-hidden">
+                  <div className="flex overflow-x-auto no-scrollbar">
                     {[
-                      { id: 'dashboard', label: 'Dashboard', icon: Users },
-                      { id: 'review', label: 'Tinjauan Kinerja', icon: ClipboardCheck }, // TAB BARU
-                      { id: 'matrix', label: 'Matriks Keahlian', icon: Award },
-                      { id: 'performance', label: 'Performance 360°', icon: TrendingUp },
-                      { id: 'career', label: 'Career Path', icon: TrendingUp },
-                      { id: 'compensation', label: 'Compensation', icon: DollarSign },
-                      { id: 'guide', label: 'Panduan Sistem', icon: BookOpen }
+                      { id: 'dashboard', label: 'Dashboard', icon: Icons.Users },
+                      { id: 'review', label: 'Tinjauan Kinerja', icon: Icons.ClipboardCheck },
+                      { id: 'matrix', label: 'Matriks Skill', icon: Icons.Award },
+                      { id: 'performance', label: 'Performance 360', icon: Icons.TrendingUp },
+                      { id: 'career', label: 'Career Path', icon: Icons.TrendingUp },
+                      { id: 'compensation', label: 'Kompensasi', icon: Icons.DollarSign },
+                      { id: 'guide', label: 'Panduan & KPI', icon: Icons.BookOpen }
                     ].map(tab => {
                       const Icon = tab.icon;
+                      const isActive = activeTab === tab.id;
                       return (
                         <button
                           key={tab.id}
                           onClick={() => setActiveTab(tab.id)}
-                          className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors whitespace-nowrap ${
-                            activeTab === tab.id
-                              ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                              : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                          className={`flex items-center gap-2 px-5 py-4 font-medium transition-all whitespace-nowrap border-b-2 ${
+                            isActive
+                              ? 'text-blue-600 border-blue-600 bg-blue-50/50'
+                              : 'text-slate-500 border-transparent hover:text-blue-600 hover:bg-slate-50'
                           }`}
                         >
-                          <Icon size={20} />
+                          <Icon size={18} />
                           {tab.label}
                         </button>
                       );
@@ -474,1173 +360,515 @@
                 </div>
 
                 {activeTab === 'dashboard' && (
-                  <div>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                      <div className="bg-white rounded-lg shadow-lg p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-gray-500 text-sm">Total Karyawan</p>
-                            <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
-                          </div>
-                          <Users className="text-blue-500" size={40} />
-                        </div>
-                      </div>
-                      <div className="bg-white rounded-lg shadow-lg p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-gray-500 text-sm">Performa Tinggi</p>
-                            <p className="text-3xl font-bold text-gray-800">{stats.highPerformers}</p>
-                          </div>
-                          <TrendingUp className="text-green-500" size={40} />
-                        </div>
-                      </div>
-                      <div className="bg-white rounded-lg shadow-lg p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-gray-500 text-sm">Siap Promosi</p>
-                            <p className="text-3xl font-bold text-gray-800">{promotionCandidates.length}</p>
-                          </div>
-                          <Award className="text-purple-500" size={40} />
-                        </div>
-                      </div>
-                      <div className="bg-white rounded-lg shadow-lg p-6">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-gray-500 text-sm">Rata-rata Gaji</p>
-                            <p className="text-3xl font-bold text-gray-800">
-                              {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(stats.avgSalary)}
-                            </p>
-                          </div>
-                          <DollarSign className="text-yellow-500" size={40} />
-                        </div>
-                      </div>
+                  <div className="space-y-6 animate-fade-in">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <StatCard label="Total Karyawan" value={stats.total} icon={Icons.Users} color="blue" />
+                        <StatCard label="Multi-Fungsi" value={multiFuncStats.count} subtext="Hemat Ops (Est)" icon={Icons.Layers} color="purple" />
+                        <StatCard label="Rata-rata Absensi" value={`${stats.avgAttendance}%`} icon={Icons.Clock} color={stats.avgAttendance < 95 ? "red" : "green"} />
+                        <StatCard label="Avg. Gaji" value={`Rp ${(stats.avgSalary/1000000).toFixed(1)}jt`} icon={Icons.DollarSign} color="yellow" />
                     </div>
 
-                    <div className="mb-6 bg-white rounded-lg shadow-lg p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <AlertTriangle className="w-8 h-8 text-yellow-500" />
-                        <h2 className="text-xl font-bold text-gray-800">Perlu Tinjauan: Kandidat Promosi</h2>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Karyawan berikut menunjukkan Kinerja (Skor 90+) dan Kesiapan (Avg. Kompetensi 3.5+) yang tinggi.
-                        Harap tinjau menggunakan panduan untuk potensi promosi di siklus berikutnya.
-                      </p>
-                      
-                      {promotionCandidates.length > 0 ? (
-                        <div className="space-y-3">
-                          {promotionCandidates.map(emp => (
-                            <div key={emp.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                              <div>
-                                <p className="text-base font-bold text-gray-900">{emp.name}</p>
-                                <p className="text-sm text-gray-700">{emp.position} - <span className="font-medium">{emp.level}</span></p>
-                              </div>
-                              <div className="flex gap-4 mt-2 sm:mt-0 text-sm">
-                                <div className="text-center">
-                                  <p className="font-bold text-blue-600 text-lg">{emp.score}</p>
-                                  <p className="text-gray-600">Skor</p>
-                                </div>
-                                <div className="text-center">
-                                  <p className="font-bold text-green-600 text-lg">{parseFloat(getAvgCompetency(emp.id)).toFixed(1)}</p>
-                                  <p className="text-gray-600">Avg. Kompetensi</p>
-                                </div>
-                              </div>
+                    {promotionCandidates.length > 0 && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                            <div className="bg-yellow-100 p-2 rounded-full text-yellow-600 shrink-0"><Icons.AlertTriangle size={24} /></div>
+                            <div className="flex-1">
+                                <h3 className="font-bold text-yellow-800">Kandidat Promosi Terdeteksi ({promotionCandidates.length})</h3>
+                                <p className="text-sm text-yellow-700">Skor Akhir > 90, Absensi > 95%, dan Kompetensi Matang.</p>
                             </div>
-                          ))}
+                            <button onClick={() => setActiveTab('review')} className="text-sm bg-white border border-yellow-300 text-yellow-700 px-3 py-1.5 rounded-lg hover:bg-yellow-100 transition-colors">Lihat di Tinjauan</button>
                         </div>
-                      ) : (
-                        <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
-                          <p className="text-sm font-medium text-green-800">Tidak ada kandidat promosi yang teridentifikasi saat ini.</p>
+                    )}
+
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
+                            <h3 className="font-bold text-slate-700">Data Karyawan</h3>
                         </div>
-                      )}
-                    </div>
-
-                    <div className="mb-6">
-                      <button
-                        onClick={() => setShowAddModal(true)}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                      >
-                        <Plus size={20} />
-                        Tambah Karyawan
-                      </button>
-                    </div>
-
-                    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nama</th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Posisi</th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Level</th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Skor</th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Rating</th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Aksi</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {employees.map(emp => (
-                            <tr key={emp.id} className="hover:bg-gray-50 transition-colors">
-                              <td className="px-6 py-4 text-sm font-medium text-gray-900">{emp.name}</td>
-                              <td className="px-6 py-4 text-sm text-gray-700">{emp.position}</td>
-                              <td className="px-6 py-4 text-sm text-gray-700">{emp.level}</td>
-                              <td className="px-6 py-4 text-sm">
-                                <span className="font-bold text-blue-600">{emp.score}</span>
-                              </td>
-                              <td className="px-6 py-4 text-sm">
-                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRatingColor(emp.rating)}`}>
-                                  {emp.rating}
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-sm">
-                                <button 
-                                  onClick={() => setEditingEmployee(emp)}
-                                  className="text-blue-600 hover:text-blue-800 transition-colors"
-                                >
-                                  <Edit2 size={18} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b">
+                                    <tr>
+                                        <th className="px-6 py-3">Nama & Posisi</th>
+                                        <th className="px-6 py-3">Multi-Posisi</th>
+                                        <th className="px-6 py-3 text-center">Absensi</th>
+                                        <th className="px-6 py-3 text-center">Skor (Bobot)</th>
+                                        <th className="px-6 py-3 text-center">Level</th>
+                                        <th className="px-6 py-3 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {employees.map(emp => {
+                                        const wScore = calculateWeightedScore(emp.score, emp.attendance);
+                                        return (
+                                            <tr key={emp.id} className="hover:bg-slate-50 transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <div className="font-semibold text-slate-800">{emp.name}</div>
+                                                    <div className="text-xs text-slate-500">{emp.position}</div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {emp.position2 ? <span className="allowance-badge"><Icons.Layers size={12} /> {emp.position2}</span> : <span className="text-slate-300">-</span>}
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <div className="flex flex-col items-center">
+                                                        <span className={`font-bold ${emp.attendance < 90 ? 'text-red-600' : 'text-slate-700'}`}>{emp.attendance}%</span>
+                                                        <div className="w-16 h-1.5 bg-slate-200 rounded-full mt-1 overflow-hidden"><div className={`h-full ${emp.attendance < 90 ? 'bg-red-500' : 'bg-green-500'}`} style={{width: `${emp.attendance}%`}}></div></div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <div className="font-bold text-blue-600 text-lg">{wScore}</div>
+                                                    <div className="text-[10px] text-slate-400">Orig: {emp.score}</div>
+                                                </td>
+                                                <td className="px-6 py-4 text-center"><span className="px-2 py-1 rounded-full bg-slate-100 text-slate-600 text-xs">{emp.level}</span></td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <button onClick={() => setEditingEmployee(emp)} className="text-slate-400 hover:text-blue-600 transition-colors p-1 rounded-md hover:bg-blue-50"><Icons.Edit2 size={16} /></button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                   </div>
                 )}
                 
-                {/* --- TAB TINJAUAN KINERJA BARU --- */}
                 {activeTab === 'review' && (
-                  <div className="bg-white rounded-lg shadow-lg p-6">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Formulir Tinjauan Kinerja (6 Bulanan)</h2>
-                    <p className="text-gray-600 mb-6">Pilih karyawan untuk memulai tinjauan kinerja dan kompetensi.</p>
-                    <div className="space-y-3">
-                      {employees.map(emp => (
-                        <div key={emp.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border rounded-lg hover:bg-gray-50">
-                          <div>
-                            <p className="text-base font-bold text-gray-900">{emp.name}</p>
-                            <p className="text-sm text-gray-700">{emp.position} - <span className="font-medium">{emp.level}</span></p>
-                          </div>
-                          <div className="flex gap-4 mt-2 sm:mt-0 text-sm">
-                            <div className="text-center">
-                              <p className="font-bold text-blue-600 text-lg">{emp.score}</p>
-                              <p className="text-gray-600">Skor Saat Ini</p>
+                    <div className="space-y-6">
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <h2 className="text-lg font-bold text-slate-800 mb-2">Evaluasi Kinerja Berkala</h2>
+                            <p className="text-slate-500 text-sm mb-6">Pilih karyawan untuk memulai penilaian detail.</p>
+                            <div className="grid gap-4">
+                                {employees.map(emp => (
+                                    <div key={emp.id} className="flex flex-col sm:flex-row justify-between items-center p-4 border rounded-lg hover:border-blue-300 hover:shadow-md transition-all bg-white">
+                                        <div className="flex items-center gap-4 mb-3 sm:mb-0 w-full sm:w-auto">
+                                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600">{emp.name.substring(0,2).toUpperCase()}</div>
+                                            <div>
+                                                <h3 className="font-bold text-slate-800">{emp.name}</h3>
+                                                <div className="flex gap-2 text-xs text-slate-500"><span>{emp.position}</span>{emp.position2 && <span className="text-indigo-600">• {emp.position2}</span>}</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                                            <div className="text-center"><div className="text-xs text-slate-400 uppercase">Absensi</div><div className={`font-bold ${emp.attendance < 95 ? 'text-red-600' : 'text-green-600'}`}>{emp.attendance}%</div></div>
+                                            <div className="text-center"><div className="text-xs text-slate-400 uppercase">Skor Bobot</div><div className="font-bold text-blue-600">{calculateWeightedScore(emp.score, emp.attendance)}</div></div>
+                                            <button onClick={() => setReviewingEmployee(emp)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">Mulai Review</button>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                            <div className="text-center">
-                              <p className="font-bold text-green-600 text-lg">{parseFloat(getAvgCompetency(emp.id)).toFixed(1)}</p>
-                              <p className="text-gray-600">Avg. Kompetensi</p>
-                            </div>
-                            <button
-                              onClick={() => setReviewingEmployee(emp)}
-                              className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow-lg hover:bg-blue-700 transition-colors flex items-center gap-2 self-center"
-                            >
-                              <ClipboardCheck size={18} />
-                              Mulai Tinjauan
-                            </button>
-                          </div>
                         </div>
-                      ))}
                     </div>
-                  </div>
                 )}
 
                 {activeTab === 'matrix' && (
-                  <div className="bg-white rounded-lg shadow-lg overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 sticky left-0 bg-gray-50 z-10">Karyawan</th>
-                          {allCompetencies.map(comp => (
-                            <th key={comp} className="px-4 py-3 text-center text-sm font-semibold text-gray-700 min-w-[120px]">
-                              {comp}
-                            </th>
-                          ))}
-                          <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Avg</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {employees.map(emp => (
-                          <tr key={emp.id} className="hover:bg-gray-50 transition-colors group">
-                            <td className="px-6 py-4 sticky left-0 bg-white group-hover:bg-gray-50 z-10">
-                              <div className="text-sm font-medium text-gray-900">{emp.name}</div>
-                              <div className="text-xs text-gray-500">{emp.position} - {emp.level}</div>
-                            </td>
-                            {allCompetencies.map(comp => {
-                              const competency = competencies.find(c => c.employeeId === emp.id && c.competency === comp);
-                              const level = competency?.level || 0;
-                              return (
-                                <td key={comp} className="px-4 py-4 text-center">
-                                  {level > 0 ? (
-                                    <button
-                                      onClick={() => setEditingCell({ empId: emp.id, comp, currentLevel: level })}
-                                      className={`w-12 h-12 rounded-lg ${getSkillColor(level)} text-white font-bold hover:opacity-80 transition-opacity`}
-                                    >
-                                      {level}
-                                    </button>
-                                  ) : (
-                                    <span className="text-gray-300">-</span>
-                                  )}
-                                </td>
-                              );
-                            })}
-                            <td className="px-6 py-4 text-center">
-                              <span className="font-bold text-lg text-blue-600">{getAvgCompetency(emp.id)}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="p-6 border-b"><h2 className="text-lg font-bold text-slate-800">Peta Kompetensi</h2><p className="text-sm text-slate-500">Klik angka untuk edit cepat.</p></div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-slate-50">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase sticky left-0 bg-slate-50 z-10 border-r">Karyawan</th>
+                                        {allUniqueCompetencies.map(c => (<th key={c} className="px-2 py-3 text-center text-xs font-medium text-slate-500 border-r min-w-[100px]">{c}</th>))}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {employees.map(emp => (
+                                        <tr key={emp.id} className="hover:bg-slate-50">
+                                            <td className="px-4 py-3 sticky left-0 bg-white z-10 border-r group-hover:bg-slate-50">
+                                                <div className="font-medium text-sm text-slate-800">{emp.name}</div>
+                                                <div className="text-xs text-slate-500">{emp.position}</div>
+                                                {emp.position2 && <div className="text-[10px] text-indigo-600 font-medium">+ {emp.position2}</div>}
+                                            </td>
+                                            {allUniqueCompetencies.map(compName => {
+                                                const compData = competencies.find(c => c.employeeId === emp.id && c.competency === compName);
+                                                const level = compData ? compData.level : 0;
+                                                return (
+                                                    <td key={compName} className="p-2 text-center border-r border-slate-100">
+                                                        {level > 0 ? (
+                                                            <button onClick={() => setEditingCell({ empId: emp.id, comp: compName, currentLevel: level })} className={`w-8 h-8 rounded-lg text-xs font-bold text-white transition-transform hover:scale-110 ${getSkillColor(level)}`}>{level}</button>
+                                                        ) : <span className="text-slate-200">-</span>}
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 )}
-
+                
                 {activeTab === 'performance' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {employees.map(emp => (
-                      <div key={emp.id} className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
-                        <div className="mb-4">
-                          <h3 className="text-xl font-bold">{emp.name}</h3>
-                          <p className="text-blue-100">{emp.position} - {emp.level}</p>
-                        </div>
-                        <div className="mb-4">
-                          <div className="text-5xl font-bold mb-2">{emp.score}</div>
-                          <div className="text-sm text-blue-100">Skor Kinerja</div>
-                        </div>
-                        <div className="mb-4">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Kinerja Overall</span>
-                            <span>{emp.score}%</span>
-                          </div>
-                          <div className="bg-white bg-opacity-30 rounded-full h-2">
-                            <div className="bg-white rounded-full h-2" style={{ width: `${emp.score}%` }}></div>
-                          </div>
-                        </div>
-                        <div className="mb-4">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Rata-rata Kompetensi</span>
-                            <span>{getAvgCompetency(emp.id)}/5</span>
-                          </div>
-                          <div className="bg-white bg-opacity-30 rounded-full h-2">
-                            <div className="bg-white rounded-full h-2" style={{ width: `${(getAvgCompetency(emp.id) / 5) * 100}%` }}></div>
-                          </div>
-                        </div>
-                        <div className="flex justify-between items-center pt-4 border-t border-white border-opacity-30">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold bg-white text-blue-600`}>
-                            {emp.rating}
-                          </span>
-                          <span className="text-sm">
-                            {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(emp.salary)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {activeTab === 'career' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {employees.map(emp => (
-                      <div key={emp.id} className="bg-white rounded-lg shadow-lg p-6">
-                        <div className="flex items-center gap-4 mb-4">
-                          <div className="w-16 h-16 rounded-full bg-blue-500 text-white flex items-center justify-center text-2xl font-bold">
-                            {emp.name.split(' ').map(n => n[0]).join('')}
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-800">{emp.name}</h3>
-                            <p className="text-sm text-gray-600">{emp.position} - {emp.level}</p>
-                          </div>
-                        </div>
-                        <div className="mb-4">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-2">Jalur Karir:</h4>
-                          <div className="space-y-2">
-                            {careerPaths[emp.position]?.map((path, idx) => (
-                              <div key={idx} className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                {idx < (careerPaths[emp.position]?.length || 0) - 1 && (
-                                  <div className="flex-1 h-0.5 bg-blue-200"></div>
-                                )}
-                                <span className="text-sm text-gray-700 bg-gray-100 px-2 py-0.5 rounded">{path}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        <div className={`p-3 rounded-lg ${emp.score >= 85 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
-                          <p className={`text-sm font-semibold ${emp.score >= 85 ? 'text-green-800' : 'text-yellow-800'}`}>
-                            {emp.score >= 85 ? '✓ Siap untuk promosi' : '⚠ Perlu pengembangan lebih lanjut'}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {activeTab === 'compensation' && (
-                  <div>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                      <div className="bg-white rounded-lg shadow-lg p-6">
-                        <p className="text-gray-500 text-sm mb-1">Total Payroll</p>
-                        <p className="text-2xl font-bold text-gray-800">
-                          {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(
-                            employees.reduce((sum, e) => sum + e.salary, 0)
-                          )}
-                        </p>
-                      </div>
-                      <div className="bg-white rounded-lg shadow-lg p-6">
-                        <p className="text-gray-500 text-sm mb-1">Rata-rata Gaji</p>
-                        <p className="text-2xl font-bold text-gray-800">
-                          {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(stats.avgSalary)}
-                        </p>
-                      </div>
-                      <div className="bg-white rounded-lg shadow-lg p-6">
-                        <p className="text-gray-500 text-sm mb-1">Gaji Terendah</p>
-                        <p className="text-2xl font-bold text-gray-800">
-                          {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(
-                            employees.length > 0 ? Math.min(...employees.map(e => e.salary)) : 0
-                          )}
-                        </p>
-                      </div>
-                      <div className="bg-white rounded-lg shadow-lg p-6">
-                        <p className="text-gray-500 text-sm mb-1">Gaji Tertinggi</p>
-                        <p className="text-2xl font-bold text-gray-800">
-                          {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(
-                            employees.length > 0 ? Math.max(...employees.map(e => e.salary)) : 0
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      {Object.keys(positionCompetencies).map(position => {
-                        const posEmps = employees.filter(e => e.position === position);
-                        if (posEmps.length === 0) return null;
-                        const avgSalary = posEmps.reduce((sum, e) => sum + e.salary, 0) / posEmps.length;
-                        
-                        return (
-                          <div key={position} className="bg-white rounded-lg shadow-lg p-6">
-                            <div className="flex justify-between items-center mb-4">
-                              <h3 className="text-xl font-bold text-gray-800">{position}</h3>
-                              <div className="text-right">
-                                <p className="text-sm text-gray-500">{posEmps.length} karyawan</p>
-                                <p className="text-lg font-bold text-blue-600">
-                                  Avg: {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(avgSalary)}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              {posEmps.map(emp => (
-                                <div key={emp.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                                  <div>
-                                    <p className="font-medium text-gray-800">{emp.name}</p>
-                                    <p className="text-sm text-gray-600">{emp.level}</p>
-                                  </div>
-                                  <p className="font-bold text-gray-800">
-                                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(emp.salary)}
-                                  </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {employees.map(emp => (
+                            <div key={emp.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-10"><Icons.TrendingUp size={100} /></div>
+                                <h3 className="text-xl font-bold text-slate-800">{emp.name}</h3>
+                                <p className="text-slate-500 mb-4">{emp.position}</p>
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                    <div className="bg-blue-50 p-3 rounded-lg"><p className="text-xs text-blue-600 uppercase font-bold">Skor Bobot</p><p className="text-2xl font-bold text-blue-800">{calculateWeightedScore(emp.score, emp.attendance)}</p></div>
+                                    <div className="bg-green-50 p-3 rounded-lg"><p className="text-xs text-green-600 uppercase font-bold">Rata2 Skill</p><p className="text-2xl font-bold text-green-800">{getAvgCompetency(emp.id)}</p></div>
                                 </div>
-                              ))}
+                                <div className="w-full bg-slate-100 rounded-full h-2 mb-1"><div className="bg-blue-600 h-2 rounded-full" style={{width: `${calculateWeightedScore(emp.score, emp.attendance)}%`}}></div></div>
                             </div>
-                          </div>
-                        );
-                      })}
+                        ))}
                     </div>
-                  </div>
                 )}
                 
-                {/* --- KONTEN TAB PANDUAN BARU --- */}
+                {activeTab === 'career' && (
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                        <h2 className="text-lg font-bold mb-6">Jalur Karir Potensial</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {Object.entries(careerPaths).map(([role, paths]) => (
+                                <div key={role} className="relative pl-8 border-l-2 border-slate-200">
+                                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-600 border-4 border-white shadow-sm"></div>
+                                    <h3 className="font-bold text-slate-800 text-lg mb-2">{role}</h3>
+                                    <div className="space-y-2">
+                                        {paths.map((p, i) => (<div key={i} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg border border-slate-100"><Icons.TrendingUp size={16} className="text-slate-400"/><span className="text-slate-700 font-medium">{p}</span></div>))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                
+                {/* --- COMPENSATION TAB (ENHANCED) --- */}
+                {activeTab === 'compensation' && (
+                     <div className="space-y-6 animate-fade-in">
+                        {/* Summary Table */}
+                         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                             <h2 className="text-lg font-bold mb-4">Ringkasan Payroll per Posisi</h2>
+                             <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-slate-100 text-slate-600"><tr><th className="px-4 py-2 text-left">Posisi</th><th className="px-4 py-2 text-left">Jumlah Staff</th><th className="px-4 py-2 text-right">Rata-rata Gaji</th><th className="px-4 py-2 text-right">Est. Total Payroll</th></tr></thead><tbody className="divide-y">{Object.keys(positionCompetencies).map(pos => {const staff = employees.filter(e => e.position === pos);if(!staff.length) return null;const totalPay = staff.reduce((a,b) => a + b.salary, 0);return (<tr key={pos}><td className="px-4 py-3 font-medium">{pos}</td><td className="px-4 py-3">{staff.length} org</td><td className="px-4 py-3 text-right">Rp {(totalPay / staff.length).toLocaleString('id-ID')}</td><td className="px-4 py-3 text-right font-bold text-slate-700">Rp {totalPay.toLocaleString('id-ID')}</td></tr>)})}</tbody></table></div>
+                         </div>
+                         
+                         {/* Multi-Function Compensation Detail */}
+                         <div className="bg-white p-6 rounded-xl border border-blue-200 shadow-sm">
+                            <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-800">
+                                <Icons.Zap className="text-yellow-500" size={20}/> Analisis Tunjangan Multi-Fungsi (15%)
+                            </h2>
+                            <p className="text-sm text-slate-600 mb-6">Tabel ini menampilkan estimasi breakdown gaji untuk karyawan dengan peran ganda.</p>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-slate-100 text-slate-600">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left">Nama</th>
+                                            <th className="px-4 py-2 text-left">Peran Ganda</th>
+                                            <th className="px-4 py-2 text-right">Gaji Pokok (Est)</th>
+                                            <th className="px-4 py-2 text-right text-green-600">Tunjangan</th>
+                                            <th className="px-4 py-2 text-right font-bold">Total Gaji</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y">
+                                        {employees.filter(e => e.position2).map(e => {
+                                            const estimatedBase = Math.round(e.salary / 1.15);
+                                            const allowance = e.salary - estimatedBase;
+                                            return (
+                                                <tr key={e.id}>
+                                                    <td className="px-4 py-3 font-medium">{e.name}</td>
+                                                    <td className="px-4 py-3 text-xs"><span className="bg-slate-100 px-2 py-1 rounded">{e.position}</span> + <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded">{e.position2}</span></td>
+                                                    <td className="px-4 py-3 text-right text-slate-500">Rp {estimatedBase.toLocaleString('id-ID')}</td>
+                                                    <td className="px-4 py-3 text-right font-medium text-green-600">+ Rp {allowance.toLocaleString('id-ID')}</td>
+                                                    <td className="px-4 py-3 text-right font-bold text-slate-800">Rp {e.salary.toLocaleString('id-ID')}</td>
+                                                </tr>
+                                            )
+                                        })}
+                                        {employees.filter(e => e.position2).length === 0 && (
+                                            <tr><td colSpan="5" className="p-8 text-center text-slate-400 italic">Belum ada karyawan multi-fungsi.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                     </div>
+                )}
+
+                {/* --- PANDUAN & KPI --- */}
                 {activeTab === 'guide' && (
-                  <div className="space-y-6">
-                    
-                    {/* Panduan 1: Penilaian Kompetensi */}
-                    <div className="bg-white rounded-lg shadow-lg p-6">
-                      <h2 className="text-2xl font-bold text-gray-800 mb-4">Panduan Penilaian Level Kompetensi (1-5)</h2>
-                      <p className="text-gray-600 mb-4">Gunakan skala ini sebagai tolak ukur konsisten untuk semua karyawan.</p>
-                      <ul className="space-y-4">
-                        <li className="p-3 bg-gray-50 rounded-lg">
-                          <p className="font-bold text-gray-800">Level 1: Pemula (Novice)</p>
-                          <p className="text-sm text-gray-600"><span className="font-medium">Tolak Ukur:</span> Membutuhkan pengawasan penuh. Belum bisa mandiri dan masih dalam tahap belajar "apa" dan "mengapa".</p>
-                        </li>
-                        <li className="p-3 bg-gray-50 rounded-lg">
-                          <p className="font-bold text-gray-800">Level 2: Dasar (Basic)</p>
-                          <p className="text-sm text-gray-600"><span className="font-medium">Tolak Ukur:</span> Membutuhkan pengawasan sebagian. Paham dasar-dasar tugas rutin, tapi perlu panduan untuk tugas kompleks.</p>
-                        </li>
-                        <li className="p-3 bg-gray-50 rounded-lg">
-                          <p className="font-bold text-gray-800">Level 3: Mampu (Competent/Proficient)</p>
-                          <p className="text-sm text-gray-600"><span className="font-medium">Tolak Ukur:</span> Dapat bekerja mandiri dan konsisten. Memenuhi ekspektasi standar.</p>
-                        </li>
-                        <li className="p-3 bg-gray-50 rounded-lg">
-                          <p className="font-bold text-gray-800">Level 4: Mahir (Advanced)</p>
-                          <p className="text-sm text-gray-600"><span className="font-medium">Tolak Ukur:</span> Melampaui ekspektasi, dapat membimbing orang lain. Proaktif dan menjadi rujukan tim.</p>
-                        </li>
-                        <li className="p-3 bg-gray-50 rounded-lg">
-                          <p className="font-bold text-gray-800">Level 5: Pakar (Expert)</p>
-                          <p className="text-sm text-gray-600"><span className="font-medium">Tolak Ukur:</span> Inovator, menjadi rujukan utama, dan menetapkan standar baru. Memberi masukan strategis.</p>
-                        </li>
-                      </ul>
-                    </div>
-
-                    {/* Panduan 2: Jenjang Karier */}
-                    <div className="bg-white rounded-lg shadow-lg p-6">
-                      <h2 className="text-2xl font-bold text-gray-800 mb-4">Panduan Jenjang Karier (L1 - L4)</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Kolom Definisi Level */}
-                        <div className="space-y-4">
-                          <h3 className="text-lg font-semibold text-gray-700">Definisi Level</h3>
-                          <div className="p-3 bg-gray-50 rounded-lg">
-                            <p className="font-bold text-gray-800">L1-Junior</p>
-                            <p className="text-sm text-gray-600"><span className="font-medium">Fokus:</span> Belajar. Membutuhkan pengawasan dan bimbingan.</p>
-                            <p className="text-sm text-gray-600 mt-1"><span className="font-medium">Target Promosi:</span> Skor 75-89, Semua kompetensi di Level 3.</p>
-                          </div>
-                          <div className="p-3 bg-gray-50 rounded-lg">
-                            <p className="font-bold text-gray-800">L2-Regular</p>
-                            <p className="text-sm text-gray-600"><span className="font-medium">Fokus:</span> Kontribusi Mandiri. Tulang punggung operasional harian.</p>
-                            <p className="text-sm text-gray-600 mt-1"><span className="font-medium">Target Promosi:</span> Skor 90+, Sebagian besar kompetensi di Level 4.</p>
-                          </div>
-                          <div className="p-3 bg-gray-50 rounded-lg">
-                            <p className="font-bold text-gray-800">L3-Senior</p>
-                            <p className="text-sm text-gray-600"><span className="font-medium">Fokus:</span> Membimbing & Mengatasi Kompleksitas. Menjadi rujukan tim.</p>
-                            <p className="text-sm text-gray-600 mt-1"><span className="font-medium">Target Promosi:</span> Skor 95+, Semua kompetensi di Level 4 & min. satu di Level 5.</p>
-                          </div>
-                          <div className="p-3 bg-gray-50 rounded-lg">
-                            <p className="font-bold text-gray-800">L4-Expert</p>
-                            <p className="text-sm text-gray-600"><span className="font-medium">Fokus:</span> Inovasi & Strategi. Menetapkan standar baru.</p>
-                          </div>
-                        </div>
-                        {/* Kolom Hubungan Antar Data */}
-                        <div className="space-y-4">
-                          <h3 className="text-lg font-semibold text-gray-700">Hubungan Antar Data di Aplikasi</h3>
-                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <p className="font-bold text-blue-800">Level Karyawan (L1-L4)</p>
-                            <p className="text-sm text-blue-700"><span className="font-medium">Tujuan:</span> Menentukan **Rentang Gaji (Salary Band)**.</p>
-                          </div>
-                          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <p className="font-bold text-green-800">Skor & Rating (Kinerja)</p>
-                            <p className="text-sm text-green-700"><span className="font-medium">Tujuan:</span> Menentukan **Kelayakan (Eligibility)** untuk promosi. Kinerja tinggi (Skor 90+) adalah syarat wajib.</p>
-                          </div>
-                          <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                            <p className="font-bold text-purple-800">Level Kompetensi (1-5)</p>
-                            <p className="text-sm text-purple-700"><span className="font-medium">Tujuan:</span> Menentukan **Kesiapan (Readiness)** untuk promosi. Ini adalah bukti bahwa karyawan siap.</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Panduan 3: Kompensasi */}
-                    <div className="bg-white rounded-lg shadow-lg p-6">
-                      <h2 className="text-2xl font-bold text-gray-800 mb-4">Panduan Siklus Kinerja & Kompensasi</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Kolom Siklus */}
-                        <div className="space-y-4">
-                           <h3 className="text-lg font-semibold text-gray-700">Siklus Penilaian</h3>
-                           <div className="p-3 bg-gray-50 rounded-lg">
-                             <p className="font-bold text-gray-800">Penilaian Kinerja (6 Bulan)</p>
-                             <p className="text-sm text-gray-600"><span className="font-medium">Kapan:</span> Juni & Desember.</p>
-                             <p className="text-sm text-gray-600"><span className="font-medium">Tujuan:</span> Memberi feedback, update Matriks Keahlian, identifikasi kandidat promosi.</p>
-                           </div>
-                           <div className="p-3 bg-gray-50 rounded-lg">
-                             <p className="font-bold text-gray-800">Kenaikan Gaji Tahunan (1 Tahun)</p>
-                             <p className="text-sm text-gray-600"><span className="font-medium">Kapan:</span> Juli.</p>
-                             <p className="text-sm text-gray-600"><span className="font-medium">Tujuan:</span> Memberi penghargaan (kenaikan %) atas kinerja 12 bulan terakhir.</p>
-                           </div>
-                           <div className="p-3 bg-gray-50 rounded-lg">
-                             <p className="font-bold text-gray-800">Siklus Promosi (6 Bulan)</p>
-                             <p className="text-sm text-gray-600"><span className="font-medium">Kapan:</span> Januari & Juli.</p>
-                             <p className="text-sm text-gray-600"><span className="font-medium">Tujuan:</span> Menaikkan level dan memberi penyesuaian gaji promosi.</p>
-                           </div>
-                        </div>
-                        {/* Kolom Struktur Gaji */}
-                        <div className="space-y-4">
-                          <h3 className="text-lg font-semibold text-gray-700">Struktur Kompensasi (Contoh)</h3>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                              <thead className="bg-gray-100 text-gray-600">
-                                <tr>
-                                  <th className="px-4 py-2">Level</th>
-                                  <th className="px-4 py-2">Rentang Gaji</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr className="border-b"><td className="px-4 py-2 font-medium">L1-Junior</td><td className="px-4 py-2">Rp 980.000 - Rp 1.080.000</td></tr>
-                                <tr className="border-b"><td className="px-4 py-2 font-medium">L2-Regular</td><td className="px-4 py-2">Rp 1.500.000 - Rp 2.800.000</td></tr>
-                                <tr className="border-b"><td className="px-4 py-2 font-medium">L3-Senior</td><td className="px-4 py-2">Rp 3.000.000 - Rp 4.500.000</td></tr>
-                                <tr><td className="px-4 py-2 font-medium">L4-Expert</td><td className="px-4 py-2">Rp 4.500.000+</td></tr>
-                              </tbody>
-                            </table>
-                          </div>
-                          
-                          <h3 className="text-lg font-semibold text-gray-700 mt-4">Kenaikan Tahunan (Merit)</h3>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                              <thead className="bg-gray-100 text-gray-600">
-                                <tr>
-                                  <th className="px-4 py-2">Rating</th>
-                                  <th className="px-4 py-2">Kenaikan Gaji</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                <tr className="border-b"><td className="px-4 py-2 font-medium">Luar Biasa (95+)</td><td className="px-4 py-2">8% - 12%</td></tr>
-                                <tr className="border-b"><td className="px-4 py-2 font-medium">Sangat Baik (85-94)</td><td className="px-4 py-2">5% - 7%</td></tr>
-                                <tr className="border-b"><td className="px-4 py-2 font-medium">Baik (75-84)</td><td className="px-4 py-2">3% - 4%</td></tr>
-                                <tr><td className="px-4 py-2 font-medium">Perlu Perbaikan (&lt; 75)</td><td className="px-4 py-2">0%</td></tr>
-                              </tbody>
-                            </table>
-                          </div>
-
-                        </div>
-                      </div>
-                    </div>
-
+                  <div className="space-y-6 animate-fade-in">
+                    <div className="bg-blue-600 text-white p-6 rounded-xl shadow-lg"><h2 className="text-2xl font-bold mb-2">Panduan Sistem TalentFlow</h2><p className="opacity-90">Sistem ini menggunakan logika <strong>Weighted Score</strong> (70% Kinerja + 30% Absensi) untuk objektivitas.</p></div>
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"><div className="p-6 border-b bg-indigo-50/50"><h2 className="text-xl font-bold text-indigo-900 flex items-center gap-2"><Icons.List size={24} className="text-indigo-600" /> Standar KPI (Key Performance Indicators)</h2><p className="text-indigo-700 text-sm mt-1">Gunakan tabel ini sebagai acuan saat mengisi skor kinerja bulanan.</p></div><div className="p-6 grid gap-6">{Object.entries(KPI_STANDARDS).map(([role, kpis]) => (<div key={role} className="border border-slate-200 rounded-lg overflow-hidden"><div className="bg-slate-50 px-4 py-3 border-b font-bold text-slate-700 flex justify-between"><span>{role}</span><span className="text-xs bg-slate-200 px-2 py-1 rounded text-slate-600">Total Bobot: 100%</span></div><div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="text-xs text-slate-500 uppercase border-b bg-slate-50/30"><th className="px-4 py-2 text-left w-1/4">Indikator</th><th className="px-4 py-2 text-center w-20">Bobot</th><th className="px-4 py-2 text-left w-1/4">Target</th><th className="px-4 py-2 text-left">Cara Ukur</th></tr></thead><tbody className="divide-y divide-slate-100">{kpis.map((k, idx) => (<tr key={idx} className="hover:bg-slate-50"><td className="px-4 py-2 font-medium text-slate-800">{k.kpi}</td><td className="px-4 py-2 text-center font-bold text-blue-600">{k.weight}</td><td className="px-4 py-2 text-slate-700 font-medium">{k.target}</td><td className="px-4 py-2 text-slate-500 italic">{k.desc}</td></tr>))}</tbody></table></div></div>))}</div></div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"><h2 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Icons.Award size={20} className="text-blue-500"/> Level Kompetensi</h2><ul className="space-y-3 text-sm"><li className="p-2 bg-slate-50 rounded border"><span className="font-bold block">Level 1: Pemula</span> Butuh pengawasan penuh.</li><li className="p-2 bg-slate-50 rounded border"><span className="font-bold block">Level 2: Dasar</span> Butuh bantuan tugas kompleks.</li><li className="p-2 bg-slate-50 rounded border"><span className="font-bold block">Level 3: Mampu</span> Mandiri & konsisten (Standar).</li><li className="p-2 bg-slate-50 rounded border"><span className="font-bold block">Level 4: Mahir</span> Melampaui ekspektasi & membimbing.</li><li className="p-2 bg-slate-50 rounded border"><span className="font-bold block">Level 5: Pakar</span> Inovator & Strategis.</li></ul></div><div className="space-y-6"><div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"><h2 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Icons.DollarSign size={20} className="text-yellow-500"/> Struktur Gaji</h2><table className="w-full text-sm"><tbody className="divide-y"><tr><td className="py-2">L1-Junior</td><td className="py-2 text-right">Rp 980rb - 1.8jt</td></tr><tr><td className="py-2">L2-Regular</td><td className="py-2 text-right">Rp 1.5jt - 2.8jt</td></tr><tr><td className="py-2">L3-Senior</td><td className="py-2 text-right">Rp 3.0jt - 4.5jt</td></tr><tr><td className="py-2">L4-Expert</td><td className="py-2 text-right">Rp 4.5jt+</td></tr></tbody></table></div><div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6"><h2 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><Icons.TrendingUp size={20} className="text-green-500"/> Syarat Promosi</h2><ul className="space-y-2 text-sm"><li className="flex items-center gap-2"><Icons.CheckCircle size={16} className="text-green-600"/> Skor Akhir > 90 (Wajib)</li><li className="flex items-center gap-2"><Icons.CheckCircle size={16} className="text-green-600"/> Absensi > 95%</li><li className="flex items-center gap-2"><Icons.CheckCircle size={16} className="text-green-600"/> Kompetensi Matang</li></ul></div></div></div>
                   </div>
                 )}
-                
+
               </div>
 
-              {/* Add Employee Modal */}
-              {showAddModal && (
-                <AddEmployeeModal 
-                  onClose={() => setShowAddModal(false)} 
-                  onAdd={addEmployee} 
-                  positions={Object.keys(positionCompetencies)} 
-                  positionCompetencies={positionCompetencies} 
-                />
+              {(showAddModal || editingEmployee) && (
+                <ModalEmployee isOpen={true} isEdit={!!editingEmployee} initialData={editingEmployee} positions={Object.keys(positionCompetencies)} onClose={() => { setShowAddModal(false); setEditingEmployee(null); }} onSave={editingEmployee ? handleUpdateEmployee : handleAddEmployee} calculateWeightedScore={calculateWeightedScore} />
               )}
-              
-              {/* Edit Employee Modal (Baru) */}
-              {editingEmployee && (
-                <EditEmployeeModal 
-                  employee={editingEmployee}
-                  onClose={() => setEditingEmployee(null)} 
-                  onSave={handleUpdateEmployee}
-                  positions={Object.keys(positionCompetencies)} 
-                />
-              )}
-
-              {/* Edit Competency Modal */}
               {editingCell && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-lg p-6 w-96">
-                    <h3 className="text-lg font-bold mb-4">Edit Level Kompetensi</h3>
-                    <p className="text-sm text-gray-600 mb-1">Karyawan: <span className="font-medium">{employees.find(e => e.id === editingCell.empId)?.name}</span></p>
-                    <p className="text-sm text-gray-600 mb-4">Kompetensi: <span className="font-medium">{editingCell.comp}</span></p>
-                    <div className="flex gap-2 justify-center mb-4">
-                      {[1, 2, 3, 4, 5].map(level => (
-                        <button
-                          key={level}
-                          onClick={() => {
-                            updateCompetencyLevel(editingCell.empId, editingCell.comp, level);
-                          }}
-                          className={`w-12 h-12 rounded-lg font-bold hover:opacity-80 transition-all ${
-                            level === editingCell.currentLevel 
-                              ? `${getSkillColor(level)} text-white ring-4 ring-offset-2 ring-blue-500`
-                              : `${getSkillColor(level)} text-white`
-                          }`}
-                        >
-                          {level}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => setEditingCell(null)}
-                      className="w-full bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
-                    >
-                      Batal
-                    </button>
-                  </div>
-                </div>
+                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"><div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl animate-fade-in"><h3 className="font-bold text-lg mb-4 text-center">Update Level Kompetensi</h3><p className="text-center text-sm text-slate-500 mb-6">{editingCell.comp}</p><div className="flex justify-center gap-2 mb-6">{[1,2,3,4,5].map(lvl => (<button key={lvl} onClick={() => handleUpdateCompetencyCell(editingCell.empId, editingCell.comp, lvl)} className={`w-10 h-10 rounded-lg font-bold text-white transition-all hover:scale-110 ${getSkillColor(lvl)}`}>{lvl}</button>))}</div><button onClick={() => setEditingCell(null)} className="w-full py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 font-medium">Batal</button></div></div>
               )}
-              
-              {/* --- MODAL TINJAUAN KINERJA BARU --- */}
-              {reviewingEmployee && (
-                <PerformanceReviewModal
-                  employee={reviewingEmployee}
-                  employeeCompetencies={competencies.filter(c => c.employeeId === reviewingEmployee.id)}
-                  positionCompetencies={positionCompetencies[reviewingEmployee.position] || []}
-                  onClose={() => setReviewingEmployee(null)}
-                  onSave={handleSubmitReview}
-                  getSkillColor={getSkillColor}
-                />
-              )}
-              
+              {reviewingEmployee && (<ModalReview employee={reviewingEmployee} competencies={competencies.filter(c => c.employeeId === reviewingEmployee.id)} onClose={() => setReviewingEmployee(null)} onSave={handleSaveReview} calculateWeightedScore={calculateWeightedScore} getSkillColor={getSkillColor} kpiStandards={KPI_STANDARDS} />)}
+
             </div>
           );
         };
 
-        const AddEmployeeModal = ({ onClose, onAdd, positions, positionCompetencies }) => {
-          const { X } = { X: IconX };
-        
-          const [formData, setFormData] = useState({
-            name: '',
-            position: positions[0],
-            level: 'L1-Junior',
-            score: 75,
-            rating: 'Baik',
-            salary: 4000000,
-            competencies: {}
-          });
-
-          useEffect(() => {
-            const comps = {};
-            if (positionCompetencies[formData.position]) {
-              positionCompetencies[formData.position].forEach(skill => {
-                comps[skill] = 3;
-              });
-            }
-            setFormData(prev => ({ ...prev, competencies: comps }));
-          }, [formData.position, positionCompetencies]);
-
-          const handleSubmit = (e) => {
-            e.preventDefault();
-            onAdd(formData);
-          };
-
-          return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <div className="sticky top-0 bg-white p-6 pb-4 border-b z-10">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-gray-800">Tambah Karyawan Baru</h2>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-                      <X size={24} />
-                    </button>
-                  </div>
-                </div>
-                <form onSubmit={handleSubmit}>
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Posisi</label>
-                        <select
-                          value={formData.position}
-                          onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          {positions.map(pos => (
-                            <option key={pos} value={pos}>{pos}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
-                        <select
-                          value={formData.level}
-                          onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          <option value="L1-Junior">L1-Junior</option>
-                          <option value="L2-Regular">L2-Regular</option>
-                          <option value="L3-Senior">L3-Senior</option>
-                          <option value="L4-Expert">L4-Expert</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Skor Kinerja (0-100)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          required
-                          value={formData.score}
-                          onChange={(e) => setFormData({ ...formData, score: parseInt(e.target.value) || 0 })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
-                        <select
-                          value={formData.rating}
-                          onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          <option value="Luar Biasa">Luar Biasa</option>
-                          <option value="Sangat Baik">Sangat Baik</option>
-                          <option value="Baik">Baik</option>
-                          <option value="Perlu Perbaikan">Perlu Perbaikan</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Gaji Bulanan (IDR)</label>
-                      <input
-                        type="number"
-                        required
-                        value={formData.salary}
-                        onChange={(e) => setFormData({ ...formData, salary: parseInt(e.target.value) || 0 })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Penilaian Kompetensi (1-5)</label>
-                      <div className="space-y-3">
-                        {positionCompetencies[formData.position] && positionCompetencies[formData.position].map(skill => (
-                          <div key={skill} className="flex items-center justify-between">
-                            <span className="text-sm text-gray-700">{skill}</span>
-                            <div className="flex gap-2">
-                              {[1, 2, 3, 4, 5].map(level => (
-                                <button
-                                  key={level}
-                                  type="button"
-                                  onClick={() => setFormData({
-                                    ...formData,
-                                    competencies: { ...formData.competencies, [skill]: level }
-                                  })}
-                                  className={`w-10 h-10 rounded-lg font-bold transition-colors ${
-                                    formData.competencies[skill] === level
-                                      ? 'bg-blue-600 text-white'
-                                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                                  }`}
-                                >
-                                  {level}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="sticky bottom-0 bg-white p-6 pt-4 border-t z-10">
-                    <div className="flex gap-4">
-                      <button
-                        type="submit"
-                        className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                      >
-                        Simpan
-                      </button>
-                      <button
-                        type="button"
-                        onClick={onClose}
-                        className="flex-1 bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                      >
-                        Batal
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
+        const StatCard = ({ label, value, icon: Icon, color, subtext }) => (
+            <div className={`bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between hover:border-${color}-200 transition-colors`}>
+                <div><p className="text-slate-500 text-xs font-bold uppercase tracking-wide">{label}</p><p className={`text-2xl font-bold text-slate-800 mt-1`}>{value}</p>{subtext && <p className={`text-[10px] text-${color}-600 font-medium mt-1`}>{subtext}</p>}</div>
+                <div className={`p-3 rounded-lg bg-${color}-50 text-${color}-600`}><Icon size={24} /></div>
             </div>
-          );
-        };
+        );
 
-        /**
-         * Komponen Modal Baru untuk Edit Karyawan
-         */
-        const EditEmployeeModal = ({ employee, onClose, onSave, positions }) => {
-          const { X, AlertTriangle } = { X: IconX, AlertTriangle: IconAlertTriangle };
-          const [formData, setFormData] = useState({ ...employee });
-          const [positionChanged, setPositionChanged] = useState(false);
+        // --- ENHANCED MODAL: WITH MULTI-FUNCTION CALCULATOR ---
+        const ModalEmployee = ({ isOpen, isEdit, initialData, positions, onClose, onSave, calculateWeightedScore }) => {
+            const [form, setForm] = useState(initialData || { name: '', position: positions[0], position2: '', level: 'L1-Junior', score: 75, attendance: 100, salary: 0, rating: 'Baik' });
+            const [allowanceApplied, setAllowanceApplied] = useState(false);
+            
+            const wScore = calculateWeightedScore(form.score, form.attendance);
+            const ALLOWANCE_PERCENTAGE = 0.15;
+            const potentialAllowance = Math.round(form.salary * ALLOWANCE_PERCENTAGE);
+            const totalWithAllowance = form.salary + potentialAllowance;
 
-          useEffect(() => {
-            setFormData({ ...employee });
-          }, [employee]);
-
-          const handlePositionChange = (e) => {
-            const newPosition = e.target.value;
-            setFormData({ ...formData, position: newPosition });
-            if (newPosition !== employee.position) {
-              setPositionChanged(true);
-            } else {
-              setPositionChanged(false);
-            }
-          };
-
-          const handleSubmit = (e) => {
-            e.preventDefault();
-            onSave(formData);
-          };
-
-          return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <div className="sticky top-0 bg-white p-6 pb-4 border-b z-10">
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-gray-800">Edit Karyawan</h2>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-                      <X size={24} />
-                    </button>
-                  </div>
-                </div>
-                <form onSubmit={handleSubmit}>
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Posisi</label>
-                        <select
-                          value={formData.position}
-                          onChange={handlePositionChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          {positions.map(pos => (
-                            <option key={pos} value={pos}>{pos}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
-                        <select
-                          value={formData.level}
-                          onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          <option value="L1-Junior">L1-Junior</option>
-                          <option value="L2-Regular">L2-Regular</option>
-                          <option value="L3-Senior">L3-Senior</option>
-                          <option value="L4-Expert">L4-Expert</option>
-                        </select>
-                      </div>
-                    </div>
-                    
-                    {positionChanged && (
-                      <div className="flex items-start gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0" />
-                        <p className="text-sm text-yellow-800">
-                          <strong className="font-medium">Perhatian:</strong> Anda mengubah posisi karyawan. Semua data kompetensi lama akan dihapus dan diganti dengan set kompetensi baru (Level 3) untuk posisi ini.
-                        </p>
-                      </div>
-                    )}
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Skor Kinerja (0-100)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          required
-                          value={formData.score}
-                          onChange={(e) => setFormData({ ...formData, score: parseInt(e.target.value) || 0 })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
-                        <select
-                          value={formData.rating}
-                          onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                          <option value="Luar Biasa">Luar Biasa</option>
-                          <option value="Sangat Baik">Sangat Baik</option>
-                          <option value="Baik">Baik</option>
-                          <option value="Perlu Perbaikan">Perlu Perbaikan</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Gaji Bulanan (IDR)</label>
-                      <input
-                        type="number"
-                        required
-                        value={formData.salary}
-                        onChange={(e) => setFormData({ ...formData, salary: parseInt(e.target.value) || 0 })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                  <div className="sticky bottom-0 bg-white p-6 pt-4 border-t z-10">
-                    <div className="flex gap-4">
-                      <button
-                        type="submit"
-                        className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                      >
-                        Simpan Perubahan
-                      </button>
-                      <button
-                        type="button"
-                        onClick={onClose}
-                        className="flex-1 bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                      >
-                        Batal
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
-          );
-        };
-        
-        /**
-         * Komponen Modal Baru untuk Tinjauan Kinerja
-         */
-        const PerformanceReviewModal = ({ employee, employeeCompetencies, positionCompetencies, onClose, onSave, getSkillColor }) => {
-          const { X, AlertTriangle, CheckCircle } = { X: IconX, AlertTriangle: IconAlertTriangle, CheckCircle: IconCheckCircle };
-
-          // Inisialisasi state form dengan data karyawan saat ini
-          const [formData, setFormData] = useState({
-            score: employee.score,
-            rating: employee.rating,
-            feedback: '', // Feedback dikosongkan setiap tinjauan baru
-            // Ubah array kompetensi menjadi objek map untuk state form
-            competencies: employeeCompetencies.reduce((acc, comp) => {
-              acc[comp.competency] = comp.level;
-              return acc;
-            }, {})
-          });
-
-          // Fungsi untuk mengecek kesiapan promosi berdasarkan panduan
-          const promotionReadiness = useMemo(() => {
-            const currentLevel = employee.level;
-            const newScore = parseInt(formData.score, 10);
-            const newCompetencies = formData.competencies;
-            const newAvg = Object.values(newCompetencies).reduce((sum, lvl) => sum + lvl, 0) / Object.keys(newCompetencies).length;
-
-            const checks = {
-              toL2: {
-                eligible: newScore >= 75 && newScore <= 89,
-                ready: Object.values(newCompetencies).every(lvl => lvl >= 3),
-              },
-              toL3: {
-                eligible: newScore >= 90,
-                ready: Object.values(newCompetencies).filter(lvl => lvl >= 4).length / Object.keys(newCompetencies).length >= 0.5, // 50%
-              },
-              toL4: {
-                eligible: newScore >= 95,
-                ready: Object.values(newCompetencies).every(lvl => lvl >= 4) && Object.values(newCompetencies).some(lvl => lvl >= 5),
-              }
+            const handleApplyAllowance = () => {
+                setForm({ ...form, salary: totalWithAllowance });
+                setAllowanceApplied(true);
             };
-            
-            if (currentLevel === 'L1-Junior') {
-              if (checks.toL2.eligible && checks.toL2.ready) {
-                return { status: 'Siap', message: 'Siap untuk promosi ke L2-Regular (Kinerja: Baik/Sangat Baik, Kompetensi: Semua Lvl 3+).', color: 'green' };
-              }
-              return { status: 'Belum Siap', message: 'Target L2: Skor 75-89 dan Semua kompetensi Lvl 3+.', color: 'yellow' };
-            }
-            if (currentLevel === 'L2-Regular') {
-              if (checks.toL3.eligible && checks.toL3.ready) {
-                return { status: 'Siap', message: 'Siap untuk promosi ke L3-Senior (Kinerja: 90+, Kompetensi: Mayoritas Lvl 4+).', color: 'green' };
-              }
-              return { status: 'Belum Siap', message: 'Target L3: Skor 90+ dan Mayoritas kompetensi Lvl 4+.', color: 'yellow' };
-            }
-            if (currentLevel === 'L3-Senior') {
-              if (checks.toL4.eligible && checks.toL4.ready) {
-                return { status: 'Siap', message: 'Siap untuk promosi ke L4-Expert (Kinerja: 95+, Kompetensi: Semua Lvl 4+ & min. satu Lvl 5).', color: 'green' };
-              }
-              return { status: 'Belum Siap', message: 'Target L4: Skor 95+, Semua Lvl 4+, & min. satu Lvl 5.', color: 'yellow' };
-            }
-            if (currentLevel === 'L4-Expert') {
-              return { status: 'Level Puncak', message: 'Karyawan sudah berada di level Expert.', color: 'blue' };
-            }
-            
-            return { status: 'N/A', message: 'Level karyawan tidak terdefinisi.', color: 'gray' };
-          }, [formData, employee.level]);
 
-          const handleSubmit = (e) => {
-            e.preventDefault();
-            const updatedCompetencies = Object.entries(formData.competencies).map(([compName, compLevel]) => {
-                const originalComp = employeeCompetencies.find(c => c.competency === compName);
-                return {
-                    id: originalComp.id,
-                    level: compLevel
-                };
-            });
+            const handleSubmit = (e) => { e.preventDefault(); onSave(form); };
             
-            onSave({
-              employeeId: employee.id,
-              score: parseInt(formData.score, 10),
-              rating: formData.rating,
-              feedback: formData.feedback,
-              competencies: updatedCompetencies
-            });
-          };
-
-          return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <div className="sticky top-0 bg-white p-6 pb-4 border-b z-10">
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-800">Form Tinjauan Kinerja</h2>
-                      <p className="text-gray-600">{employee.name} ({employee.position} - {employee.level})</p>
-                    </div>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-                      <X size={24} />
-                    </button>
-                  </div>
-                </div>
-                <form onSubmit={handleSubmit}>
-                  <div className="p-6 space-y-6">
-                    
-                    {/* Bagian 1: Penilaian Kompetensi */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-3">Bagian 1: Penilaian Kompetensi (1-5)</h3>
-                      <div className="space-y-4">
-                        {positionCompetencies.map(skill => (
-                          <div key={skill} className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-                            <span className="text-sm text-gray-700 mb-2 sm:mb-0">{skill}</span>
-                            <div className="flex gap-2">
-                              {[1, 2, 3, 4, 5].map(level => (
-                                <button
-                                  key={level}
-                                  type="button"
-                                  onClick={() => setFormData({
-                                    ...formData,
-                                    competencies: { ...formData.competencies, [skill]: level }
-                                  })}
-                                  className={`w-10 h-10 rounded-lg font-bold transition-all ${
-                                    formData.competencies[skill] === level
-                                      ? `${getSkillColor(level)} text-white ring-4 ring-offset-2 ring-blue-500`
-                                      : `${getSkillColor(level)} text-white opacity-50 hover:opacity-100`
-                                  }`}
-                                >
-                                  {level}
-                                </button>
-                              ))}
+            return (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
+                        <div className="px-6 py-4 border-b bg-slate-50 flex justify-between items-center"><h3 className="font-bold text-lg text-slate-800">{isEdit ? 'Edit Karyawan' : 'Tambah Karyawan Baru'}</h3><button onClick={onClose} className="text-slate-400 hover:text-red-500"><Icons.X size={24}/></button></div>
+                        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                            <div><label className="label-text">Nama Lengkap</label><input required type="text" className="input-field" value={form.name} onChange={e => setForm({...form, name: e.target.value})} /></div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="label-text">Posisi Utama</label><select className="input-field" value={form.position} onChange={e => setForm({...form, position: e.target.value})}>{positions.map(p => <option key={p} value={p}>{p}</option>)}</select></div>
+                                <div><label className="label-text text-indigo-600">Posisi Sekunder</label><select className="input-field border-indigo-200 bg-indigo-50/30" value={form.position2} onChange={e => setForm({...form, position2: e.target.value})}><option value="">- Tidak Ada -</option>{positions.filter(p => p !== form.position).map(p => <option key={p} value={p}>{p}</option>)}</select></div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                            
+                            {/* CALCULATOR TUNJANGAN */}
+                            {form.position2 && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                                    <div className="flex items-start gap-3"><div className="p-2 bg-blue-100 text-blue-600 rounded-full"><Icons.Zap size={16}/></div><div><h4 className="font-bold text-blue-800 text-sm">Deteksi Multi-Fungsi</h4><p className="text-xs text-blue-700">Karyawan ini memegang 2 peran. Disarankan memberikan tunjangan 15%.</p></div></div>
+                                    {!allowanceApplied && (
+                                        <div className="mt-2 pl-10">
+                                            <div className="flex justify-between text-sm mb-2"><span className="text-slate-500">Gaji Saat Ini:</span><span className="font-mono">Rp {form.salary.toLocaleString()}</span></div>
+                                            <div className="flex justify-between text-sm mb-2 font-bold text-green-600"><span>+ Tunjangan (15%):</span><span>Rp {potentialAllowance.toLocaleString()}</span></div>
+                                            <button type="button" onClick={handleApplyAllowance} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium transition-colors shadow-sm">Terapkan Gaji Baru (Rp {totalWithAllowance.toLocaleString()})</button>
+                                        </div>
+                                    )}
+                                    {allowanceApplied && <div className="mt-2 pl-10 text-xs text-green-700 font-medium flex items-center gap-1">✓ Tunjangan berhasil ditambahkan ke gaji pokok.</div>}
+                                </div>
+                            )}
 
-                    {/* Bagian 2: Penilaian Kinerja */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-3">Bagian 2: Penilaian Kinerja</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Skor Baru (0-100)</label>
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            required
-                            value={formData.score}
-                            onChange={(e) => setFormData({ ...formData, score: parseInt(e.target.value) || 0 })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Rating Baru</label>
-                          <select
-                            value={formData.rating}
-                            onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          >
-                            <option value="Luar Biasa">Luar Biasa</option>
-                            <option value="Sangat Baik">Sangat Baik</option>
-                            <option value="Baik">Baik</option>
-                            <option value="Perlu Perbaikan">Perlu Perbaikan</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Catatan Feedback</label>
-                        <textarea
-                          value={formData.feedback}
-                          onChange={(e) => setFormData({ ...formData, feedback: e.target.value })}
-                          rows="3"
-                          placeholder="Tuliskan feedback konstruktif, pencapaian, dan area pengembangan..."
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
+                            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-lg border">
+                                <div><label className="label-text">Skor Kinerja (0-100)</label><input type="number" min="0" max="100" className="input-field" value={form.score} onChange={e => setForm({...form, score: parseInt(e.target.value) || 0})} /></div>
+                                <div><label className="label-text">Absensi (%)</label><input type="number" min="0" max="100" className="input-field" value={form.attendance} onChange={e => setForm({...form, attendance: parseInt(e.target.value) || 0})} /></div>
+                            </div>
+                            <div className="text-right text-xs text-slate-500 font-medium">Estimasi Skor Akhir: <span className="text-blue-600 text-sm font-bold">{wScore}</span></div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="label-text">Level</label><select className="input-field" value={form.level} onChange={e => setForm({...form, level: e.target.value})}><option>L1-Junior</option><option>L2-Regular</option><option>L3-Senior</option><option>L4-Expert</option></select></div>
+                                <div><label className="label-text">Gaji Total (IDR)</label><input type="number" className="input-field" value={form.salary} onChange={e => setForm({...form, salary: parseInt(e.target.value) || 0})} /></div>
+                            </div>
+                            <div className="pt-4 flex gap-3"><button type="submit" className="flex-1 btn-primary">Simpan Data</button><button type="button" onClick={onClose} className="flex-1 btn-secondary">Batal</button></div>
+                        </form>
                     </div>
+                </div>
+            );
+        };
 
-                    {/* Bagian 3: Rekomendasi Promosi */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-3">Bagian 3: Rekomendasi Promosi (Otomatis)</h3>
-                      <div className={`flex items-start gap-3 p-4 rounded-lg
-                        ${promotionReadiness.color === 'green' ? 'bg-green-50 border border-green-200' : ''}
-                        ${promotionReadiness.color === 'yellow' ? 'bg-yellow-50 border border-yellow-200' : ''}
-                        ${promotionReadiness.color === 'blue' ? 'bg-blue-50 border border-blue-200' : ''}
-                        ${promotionReadiness.color === 'gray' ? 'bg-gray-50 border border-gray-200' : ''}
-                      `}>
-                        {promotionReadiness.color === 'green' && <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />}
-                        {promotionReadinyaess.color === 'yellow' && <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0" />}
+        // --- NEW ENHANCED REVIEW MODAL WITH KPI CALCULATOR ---
+        const ModalReview = ({ employee, competencies, onClose, onSave, calculateWeightedScore, getSkillColor, kpiStandards }) => {
+            // State for KPI Calculator
+            const [kpiScores, setKpiScores] = useState({});
+            const [currentAttendance, setCurrentAttendance] = useState(employee.attendance);
+            
+            // Get KPIs for current employee's position
+            const currentKPIs = kpiStandards[employee.position];
+
+            // Initialize KPI scores on mount
+            useEffect(() => {
+                if (currentKPIs) {
+                    const initialScores = {};
+                    currentKPIs.forEach(k => initialScores[k.kpi] = 0); // Default 0
+                    setKpiScores(initialScores);
+                }
+            }, [currentKPIs]);
+
+            // Calculate Performance Score based on Inputs
+            const calculatedPerformanceScore = useMemo(() => {
+                if (!currentKPIs) return employee.score; // Fallback if no KPI standard
+                
+                let totalScore = 0;
+                currentKPIs.forEach(k => {
+                    const score = parseInt(kpiScores[k.kpi]) || 0;
+                    const weight = k.weight / 100;
+                    totalScore += score * weight;
+                });
+                return Math.round(totalScore);
+            }, [kpiScores, currentKPIs, employee.score]);
+
+            // Calculate Final Weighted Score (Perf + Absensi)
+            const wScore = calculateWeightedScore(calculatedPerformanceScore, currentAttendance);
+            
+            const avgSkill = competencies.length ? (competencies.reduce((a,b)=>a+b.level,0)/competencies.length).toFixed(1) : 0;
+            const isEligible = wScore >= 90 && currentAttendance >= 95 && avgSkill >= 3.5;
+
+            const handleSave = () => {
+                const updatedData = {
+                    ...employee,
+                    score: calculatedPerformanceScore,
+                    attendance: parseInt(currentAttendance) || 0
+                };
+                onSave(updatedData);
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
                         
-                        <div className="text-sm">
-                          <p className={`font-bold
-                            ${promotionReadiness.color === 'green' ? 'text-green-800' : ''}
-                            ${promotionReadiness.color === 'yellow' ? 'text-yellow-800' : ''}
-                            ${promotionReadiness.color === 'blue' ? 'text-blue-800' : ''}
-                            ${promotionReadiness.color === 'gray' ? 'text-gray-800' : ''}
-                          `}>
-                            {promotionReadiness.status}
-                          </p>
-                          <p className={`
-                            ${promotionReadiness.color === 'green' ? 'text-green-700' : ''}
-                            ${promotionReadiness.color === 'yellow' ? 'text-yellow-700' : ''}
-                            ${promotionReadiness.color === 'blue' ? 'text-blue-700' : ''}
-                            ${promotionReadiness.color === 'gray' ? 'text-gray-700' : ''}
-                          `}>
-                            {promotionReadiness.message}
-                          </p>
+                        {/* LEFT SIDE: SUMMARY & COMPETENCIES (READ-ONLYish) */}
+                        <div className="w-full md:w-1/3 bg-slate-50 p-6 border-r border-slate-200 overflow-y-auto flex flex-col">
+                            <div className="mb-6">
+                                <h2 className="font-bold text-xl text-slate-800 mb-1">{employee.name}</h2>
+                                <p className="text-sm text-slate-500 font-medium">{employee.position} • {employee.level}</p>
+                            </div>
+
+                            {/* Live Result Card */}
+                            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-6">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase mb-3">Hasil Kalkulasi Live</h3>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm text-slate-600">Skor Kinerja (70%)</span>
+                                        <span className="font-bold text-blue-600 text-lg">{calculatedPerformanceScore}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm text-slate-600">Absensi (30%)</span>
+                                        <input 
+                                            type="number" 
+                                            min="0" max="100" 
+                                            value={currentAttendance}
+                                            onChange={(e) => setCurrentAttendance(e.target.value)}
+                                            className="w-16 text-right font-bold text-purple-600 border-b border-purple-200 focus:outline-none focus:border-purple-500 bg-transparent"
+                                        />
+                                    </div>
+                                    <div className="h-px bg-slate-100 my-2"></div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-bold text-slate-800">TOTAL SKOR BOBOT</span>
+                                        <span className="font-extrabold text-2xl text-slate-800">{wScore}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={`p-4 rounded-lg border flex gap-3 items-start mb-6 ${isEligible ? 'bg-green-100 border-green-300' : 'bg-yellow-50 border-yellow-200'}`}>
+                                <div className="mt-1"><Icons.Award className={isEligible ? 'text-green-700' : 'text-yellow-600'} size={20} /></div>
+                                <div>
+                                    <h4 className={`font-bold text-sm ${isEligible ? 'text-green-800' : 'text-yellow-800'}`}>{isEligible ? "SIAP PROMOSI" : "BELUM ELIGIBLE"}</h4>
+                                    <p className={`text-xs mt-1 ${isEligible ? 'text-green-700' : 'text-yellow-700'}`}>
+                                        {isEligible ? "Kriteria terpenuhi." : "Cek skor bobot (>90) & absensi (>95)."}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1">
+                                <h4 className="font-bold text-slate-700 mb-3 border-b pb-2 text-sm flex justify-between">
+                                    <span>Kompetensi (Avg: {avgSkill})</span>
+                                </h4>
+                                <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                                    {competencies.map(c => (
+                                        <div key={c.id} className="flex justify-between items-center text-xs">
+                                            <span className="text-slate-600 truncate w-2/3">{c.competency}</span>
+                                            <span className={`px-2 py-0.5 rounded text-white font-bold ${getSkillColor(c.level)}`}>Lvl {c.level}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="sticky bottom-0 bg-white p-6 pt-4 border-t z-10">
-                    <div className="flex gap-4">
-                      <button
-                        type="submit"
-                        className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                      >
-                        Simpan Tinjauan
-                      </button>
-                      <button
-                        type="button"
-                        onClick={onClose}
-                        className="flex-1 bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                      >
-                        Batal
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
-          );
-        };
-        
-        //
-        // Skrip Pemicu (Starter Script) - MASIH DI DALAM "text/babel"
-        //
-        
-        window.onload = function() {
-          try {
-            // Pemeriksaan dependensi
-            if (!window.React) throw new Error("Pustaka React gagal dimuat.");
-            if (!window.ReactDOM) throw new Error("Pustaka ReactDOM gagal dimuat.");
-            if (!window.Babel) throw new Error("Pustaka Babel gagal dimuat.");
+                        
+                        {/* RIGHT SIDE: KPI CALCULATOR (INTERACTIVE) */}
+                        <div className="flex-1 p-6 overflow-y-auto flex flex-col bg-white">
+                            <div className="flex justify-between items-center mb-6">
+                                <div>
+                                    <h3 className="font-bold text-lg text-indigo-900 flex items-center gap-2">
+                                        <div className="p-1.5 bg-indigo-100 rounded text-indigo-600"><Icons.List size={20}/></div>
+                                        Kalkulator KPI
+                                    </h3>
+                                    <p className="text-sm text-slate-500">Isi nilai realisasi untuk menghitung skor kinerja otomatis.</p>
+                                </div>
+                                <button onClick={onClose} className="text-slate-400 hover:text-red-500 transition-colors"><Icons.X size={24}/></button>
+                            </div>
+                            
+                            {currentKPIs ? (
+                                <div className="flex-1 space-y-4">
+                                    <div className="grid grid-cols-12 gap-4 text-xs font-bold text-slate-400 uppercase border-b pb-2 mb-2">
+                                        <div className="col-span-5">Indikator KPI</div>
+                                        <div className="col-span-2 text-center">Bobot</div>
+                                        <div className="col-span-3">Target</div>
+                                        <div className="col-span-2 text-center">Nilai (0-100)</div>
+                                    </div>
+                                    
+                                    {currentKPIs.map((k, idx) => (
+                                        <div key={idx} className="grid grid-cols-12 gap-4 items-center group hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                                            <div className="col-span-5">
+                                                <p className="font-bold text-slate-700 text-sm">{k.kpi}</p>
+                                                <p className="text-[10px] text-slate-400 italic mt-0.5">{k.desc}</p>
+                                            </div>
+                                            <div className="col-span-2 text-center">
+                                                <span className="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-xs font-bold">{k.weight}%</span>
+                                            </div>
+                                            <div className="col-span-3 text-sm text-slate-600 font-medium">
+                                                {k.target}
+                                            </div>
+                                            <div className="col-span-2 flex justify-center">
+                                                <input 
+                                                    type="number" 
+                                                    min="0" max="100"
+                                                    value={kpiScores[k.kpi] || ''}
+                                                    placeholder="0"
+                                                    onChange={(e) => setKpiScores({...kpiScores, [k.kpi]: e.target.value})}
+                                                    className="kpi-input transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
 
-            console.log("Semua dependensi (React, ReactDOM, Babel) dimuat. Memulai aplikasi.");
-            
-            const container = document.getElementById('root');
-            const root = ReactDOM.createRoot(container);
-            
-            // Kita bisa menggunakan JSX di sini karena Babel akan mentranspilasi
-            // seluruh blok "text/babel" ini, termasuk window.onload
-            root.render(<App />);
+                                    <div className="mt-8 p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex justify-between items-center">
+                                        <div className="text-indigo-800 text-sm">
+                                            <p className="font-bold">Total Skor Kinerja Terhitung</p>
+                                            <p className="text-xs opacity-75">Rata-rata tertimbang dari input di atas.</p>
+                                        </div>
+                                        <div className="text-3xl font-extrabold text-indigo-600 bg-white px-4 py-2 rounded-lg shadow-sm border border-indigo-100">
+                                            {calculatedPerformanceScore}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                                    <Icons.AlertTriangle size={48} className="mb-4 opacity-20"/>
+                                    <p>Tidak ada standar KPI untuk posisi ini.</p>
+                                    <p className="text-sm">Silakan input manual di form edit.</p>
+                                </div>
+                            )}
+                            
+                            <div className="pt-6 mt-4 border-t flex justify-end gap-3">
+                                <button onClick={onClose} className="px-6 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors">Batal</button>
+                                <button onClick={handleSave} className="px-6 py-2.5 bg-blue-600 rounded-lg text-white font-bold hover:bg-blue-700 shadow-md flex items-center gap-2 transition-transform active:scale-95">
+                                    <Icons.Save size={18}/>
+                                    Simpan Hasil Review
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
 
-          } catch (e) {
-            console.error("Gagal me-render aplikasi React:", e);
-            document.getElementById('root').innerHTML = `
-              <div style="padding: 20px; background-color: #fee; border: 1px solid #f00; color: #a00; font-family: sans-serif;">
-                <h2>Error Aplikasi Kritis</h2>
-                <p>Gagal memuat komponen React. Silakan periksa konsol untuk detail.</p>
-                <pre style="white-space: pre-wrap; word-wrap: break-word;">${e.message}</pre>
-                <pre style="white-space: pre-wrap; word-wrap: break-word; margin-top: 10px;">${e.stack}</pre>
-              </div>
-            `;
-          }
-        };
-        
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
     </script>
+    
+    <style>
+        .label-text { @apply block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide; }
+        .input-field { @apply w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow; }
+        .btn-primary { @apply bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-medium transition-colors shadow-sm active:scale-95 transform; }
+        .btn-secondary { @apply bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-lg font-medium transition-colors; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+    </style>
 </body>
 </html>
